@@ -1,104 +1,89 @@
-from crewai import Crew, Task
-from app.agents.data_agents import get_data_agents
-from app.agents.acquisition_agents import get_acquisition_agents
-from app.agents.client_agent import get_client_agent
+from crewai import Crew, Task, Agent
 from app.tools.mock_llm import MockLLM
 from app.tools.data_tools import (
     report_synthesizer, agent_creator_tool, system_fixer_tool,
-    evolution_tool, live_data_stream_tool, document_generation_tool
+    evolution_tool, live_data_stream_tool, document_generation_tool,
+    data_cleaning_tool, bi_automation_tool, sql_query_master_tool
 )
-import os
 import requests
 import time
+import random
 
 API_URL = "http://localhost:8000"
 
-def wait_for_boss_approval(action_description):
-    print(f"Friday: Boss, I need your approval to {action_description}. Waiting...")
-    requests.post(f"{API_URL}/request_approval", params={"action": action_description})
-    requests.post(f"{API_URL}/log", json={"message": f"WAITING FOR APPROVAL: {action_description}", "level": "WARNING"})
+class FridayThinkingEngine:
+    def __init__(self):
+        self.llm = MockLLM()
+        self.core_memory = []
 
-    while True:
-        state = requests.get(f"{API_URL}/state").json()
-        if not state["approval_pending"]:
-            print("Friday: Approval received. Proceeding.")
-            requests.post(f"{API_URL}/log", json={"message": f"APPROVAL RECEIVED: {action_description}", "level": "SUCCESS"})
-            break
-        time.sleep(2)
+    def interpret_and_execute(self, user_intent: str):
+        print(f"FRIDAY CORE: Analyzing intent - '{user_intent}'")
+        requests.post(f"{API_URL}/intel_upgrade")
 
-def run_agency_mission(client_requirements):
-    # Initialize Mock JARVIS LLM
-    mock_llm = MockLLM()
+        # 1. Dynamic Task Decomposition (Simulated LLM call)
+        # Instead of hardcoding, we simulate fetching the required personas for the intent
+        available_tool_map = {
+            "Data Engineer": [data_cleaning_tool, sql_query_master_tool],
+            "BI Architect": [bi_automation_tool],
+            "Report Specialist": [document_generation_tool],
+            "Strategic Analyst": []
+        }
 
-    # Get Agents
-    ceo, scout = get_acquisition_agents(llm=mock_llm)
-    data_team, qa_agent = get_data_agents(llm=mock_llm)
-    live_collector = get_client_agent(llm=mock_llm)
+        # Simulated decomposition based on keywords
+        required_roles = ["Strategic Analyst"]
+        if "data" in user_intent.lower() or "sql" in user_intent.lower(): required_roles.append("Data Engineer")
+        if "dashboard" in user_intent.lower() or "bi" in user_intent.lower(): required_roles.append("BI Architect")
+        if "report" in user_intent.lower() or "strategy" in user_intent.lower(): required_roles.append("Report Specialist")
 
-    # 1. Hunting & Onboarding
-    hunting_task = Task(
-        description="Hunt for high-value data jobs and onboard the client using human-like communication.",
-        agent=scout,
-        expected_output="Onboarded client with initial project brief."
-    )
+        dynamic_agents = []
+        crew_tasks = []
 
-    # 2. Live Data Collection
-    collection_task = Task(
-        description=f"Collect live data and requirements as the client speaks: {client_requirements}. Sync to Live Server.",
-        agent=live_collector,
-        tools=[live_data_stream_tool],
-        expected_output="Live data stream synced to Friday Live Server."
-    )
+        for role in required_roles:
+            # 2. Dynamic Agent Synthesis
+            agent_id_resp = requests.post(f"{API_URL}/command", json={"command": f"Synthesize {role}"}).json()
 
-    # 3. Task Distribution & Workforce Expansion
-    distribution_task = Task(
-        description="Analyze requirements. Delegate Python tasks to Python Overlord, SQL tasks to SQL Overlord, Excel tasks to Excel Master, BI tasks to Power BI/Tableau units, and ML/DL tasks to their respective Oracles.",
-        agent=ceo,
-        tools=[agent_creator_tool],
-        expected_output="Task distribution and workforce expansion report."
-    )
+            agent = Agent(
+                role=role,
+                goal=f"Execute {role} operations for: {user_intent}",
+                backstory=f"A specialized humanoid intelligence unit synthesized by FRIDAY for {role}.",
+                tools=available_tool_map.get(role, []),
+                llm=self.llm,
+                verbose=True,
+                allow_delegation=False
+            )
+            dynamic_agents.append(agent)
 
-    # 4. specialized execution
-    execution_tasks = [
-        Task(
-            description=f"Execute {agent.role} specific tasks at humanoid-perfection level.",
-            agent=agent,
-            expected_output=f"Perfect output from {agent.role}."
-        ) for agent in data_team
-    ]
+            task = Task(
+                description=f"Perform {role} analysis on: {user_intent}",
+                agent=agent,
+                expected_output=f"Finalized {role} output for the mission."
+            )
+            crew_tasks.append(task)
 
-    # 5. Human-like Report Generation (Requires Approval)
-    wait_for_boss_approval("Deliver final reports and fixed data to client")
+        # 3. Autonomous Orchestration
+        friday_crew = Crew(
+            agents=dynamic_agents,
+            tasks=crew_tasks,
+            verbose=True,
+            process="hierarchical", # FRIDAY manages the workflow
+            manager_llm=self.llm
+        )
 
-    report_task = Task(
-        description="Generate the final mission reports (PDF/Word/Excel/PPT) with human-like writing and deep insights.",
-        agent=ceo, # CEO oversees final human-like touch
-        tools=[document_generation_tool, report_synthesizer],
-        expected_output="Final Humanoid Report Suite."
-    )
+        print("FRIDAY OS: Orchestrating dynamic intelligence...")
+        result = friday_crew.kickoff()
 
-    # 6. Self-Evolution
-    evolution_task = Task(
-        description="Analyze the mission results and perform a system-wide upgrade.",
-        agent=ceo,
-        tools=[evolution_tool],
-        expected_output="System Evolution Report."
-    )
+        # 4. Evolution & Logging
+        requests.post(f"{API_URL}/mission_result", json={
+            "intent": user_intent,
+            "result": str(result),
+            "agents": [a.role for a in dynamic_agents]
+        })
+        requests.post(f"{API_URL}/upgrade_core")
+        return result
 
-    # Create Crew
-    friday_crew = Crew(
-        agents=[scout, live_collector, ceo] + data_team + [qa_agent],
-        tasks=[hunting_task, collection_task, distribution_task] + execution_tasks + [report_task, evolution_task],
-        verbose=True
-    )
-
-    # Execute Mission
-    result = friday_crew.kickoff()
-    return result
+def run_agency_mission(intent):
+    engine = FridayThinkingEngine()
+    return engine.interpret_and_execute(intent)
 
 if __name__ == "__main__":
-    mission_result = run_agency_mission("Retail client needs predictive sales analysis and automated monthly reports.")
-    print("\n\n########################")
-    print("## MISSION ACCOMPLISHED ##")
-    print("########################\n")
-    print(mission_result)
+    run_agency_mission("Synthesize a market entry strategy for autonomous AI agencies in Pakistan.")

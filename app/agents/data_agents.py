@@ -76,6 +76,22 @@ def get_data_agents(llm=None):
         verbose=True
     )
 
+    big_data_architect = Agent(
+        role='Big Data Architect',
+        goal='Design and manage large-scale data processing systems and clusters.',
+        backstory='Specialist in Spark, Hadoop, and cloud data lakes. Ensures infrastructure can handle petabytes of information.',
+        llm=llm,
+        verbose=True
+    )
+
+    small_data_specialist = Agent(
+        role='Small Data Specialist',
+        goal='Extract massive value from limited data sets using precision techniques.',
+        backstory='Expert in Bayesian statistics and high-quality data curation. Proves that you don\'t always need big data to get big insights.',
+        llm=llm,
+        verbose=True
+    )
+
     # The Gatekeeper
     qa_agent = Agent(
         role='QA Agent',
@@ -89,5 +105,6 @@ def get_data_agents(llm=None):
     return [
         python_overlord, sql_overlord, excel_master,
         humanoid_report_generator, ml_oracle, dl_strategist,
-        power_bi_commander, tableau_viz_architect
+        power_bi_commander, tableau_viz_architect,
+        big_data_architect, small_data_specialist
     ], qa_agent

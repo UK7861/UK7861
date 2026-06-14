@@ -10,8 +10,8 @@ def test_agent_counts():
     ceo, scout = get_acquisition_agents()
     client_liaison = get_client_agent()
 
-    # Updated for v6.0 Roster (BI specialized agents added)
-    assert len(data_team) == 8
+    # Updated for v6.0 Roster (BI specialized agents added + Big/Small Data)
+    assert len(data_team) == 10
     assert qa.role == 'QA Agent'
     assert ceo.role == 'Friday CEO'
     assert scout.role == 'JARVIS Scout & Liaison'
@@ -36,4 +36,6 @@ def test_api_server_endpoints():
     client = TestClient(app)
     response = client.get("/state")
     assert response.status_code == 200
-    assert "status" in response.json()
+    data = response.json()
+    assert "core" in data
+    assert "status" in data["core"]

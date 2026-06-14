@@ -96,6 +96,20 @@ class SQLQueryMasterTool(BaseTool):
     def _run(self, requirement: str) -> str:
         return f"SQL Master: Query executed for '{requirement}'. Database optimized and results extracted."
 
+class DigitalTwinSimulationTool(BaseTool):
+    name: str = "digital_twin_simulation_tool"
+    description: str = "Simulates business outcomes and AI agent collaboration in a virtual environment. Input is the scenario to simulate."
+
+    def _run(self, scenario: str) -> str:
+        return f"FRIDAY Simulation: Digital twin of scenario '{scenario}' completed. Probability of success: 94.2%. Neural pathways optimized."
+
+class NeuralGraphTool(BaseTool):
+    name: str = "neural_graph_tool"
+    description: str = "Maps new data points to the FRIDAY knowledge graph. Input is the data node and its relationships."
+
+    def _run(self, node_data: str) -> str:
+        return f"Knowledge Graph: New neural node '{node_data}' integrated and cross-referenced with core memory."
+
 # Exporting instances for CrewAI
 data_cleaning_tool = DataCleaningTool()
 bi_automation_tool = BIAutomationTool()
@@ -108,3 +122,5 @@ document_generation_tool = DocumentGenerationTool()
 live_data_stream_tool = LiveDataStreamTool()
 persistent_memory_tool = PersistentMemoryTool()
 sql_query_master_tool = SQLQueryMasterTool()
+digital_twin_tool = DigitalTwinSimulationTool()
+neural_graph_tool = NeuralGraphTool()

@@ -3,420 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FRIDAY DATA CORE — COMMAND DECK</title>
+    <title>FRIDAY — LIVING INTELLIGENCE OS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0a0a0f;
-            --accent-cyan: #00f5ff;
-            --accent-green: #39ff14;
-            --accent-purple: #bc13fe;
-            --accent-red: #ff3131;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg: #030308;
+            --cyan: #00f5ff;
+            --purple: #bc13fe;
+            --glass: rgba(255, 255, 255, 0.05);
         }
+        body, html { margin: 0; padding: 0; overflow: hidden; background: var(--bg); font-family: 'JetBrains Mono', monospace; color: #fff; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #network-container { position: absolute; top: 100px; right: 20px; width: 400px; height: 300px; z-index: 5; background: var(--glass); border: 1px solid rgba(0, 245, 255, 0.1); border-radius: 5px; }
+        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
 
-        body {
-            background-color: var(--bg-color);
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            margin: 0;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100-vh;
-        }
+        .panel { position: absolute; background: var(--glass); border: 1px solid rgba(0, 245, 255, 0.2); backdrop-filter: blur(10px); padding: 15px; border-radius: 5px; pointer-events: auto; z-index: 100; }
+        .top-bar { top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; letter-spacing: 5px; color: var(--cyan); text-shadow: 0 0 15px var(--cyan); }
 
-        /* Top Bar */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background: var(--glass-bg);
-            border-bottom: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px);
-        }
+        .agent-roster { top: 100px; left: 20px; width: 250px; bottom: 100px; overflow-y: auto; }
+        .mission-log { bottom: 20px; right: 20px; width: 400px; height: 300px; overflow-y: auto; }
+        .stat-grid { bottom: 20px; left: 20px; display: flex; gap: 15px; }
 
-        .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            color: var(--accent-cyan);
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--accent-cyan);
-        }
+        .agent-card { background: rgba(0,0,0,0.3); border-left: 3px solid var(--cyan); padding: 10px; margin-bottom: 10px; font-size: 0.8rem; }
+        .log-entry { margin-bottom: 5px; font-size: 0.75rem; border-left: 2px solid var(--purple); padding-left: 5px; }
 
-        .system-status {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
+        .stat-card { text-align: center; min-width: 100px; }
+        .stat-val { font-family: 'Orbitron'; color: var(--cyan); font-size: 1.2rem; }
 
-        .status-badge {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            border: 1px solid var(--accent-green);
-            color: var(--accent-green);
-            box-shadow: 0 0 5px var(--accent-green);
-        }
+        #command-portal { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); z-index: 200; pointer-events: auto; width: 500px; }
+        #command-input { width: 100%; background: none; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: 'Orbitron'; font-size: 1.2rem; text-align: center; outline: none; padding: 10px; }
 
-        .approval-overlay {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(10, 10, 15, 0.95);
-            border: 2px solid var(--accent-red);
-            padding: 30px;
-            border-radius: 15px;
-            z-index: 1000;
-            text-align: center;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 0 30px var(--accent-red);
-        }
-
-        .btn-approve {
-            background: var(--accent-green);
-            border: none;
-            color: #000;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            margin-top: 20px;
-        }
-
-        /* Main Layout */
-        main {
-            display: grid;
-            grid-template-columns: 300px 1fr 400px;
-            gap: 20px;
-            padding: 20px;
-            flex-grow: 1;
-            height: calc(100vh - 60px);
-        }
-
-        .panel {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 10px;
-            backdrop-filter: blur(5px);
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        /* Agent Cards */
-        .agent-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .agent-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            padding: 10px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-        }
-
-        .pulse {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--accent-green);
-            box-shadow: 0 0 10px var(--accent-green);
-            animation: pulse-green 2s infinite;
-        }
-
-        .pulse.qa {
-            background: var(--accent-red);
-            box-shadow: 0 0 10px var(--accent-red);
-            animation: pulse-red 1s infinite;
-        }
-
-        @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(57, 255, 20, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(57, 255, 20, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(57, 255, 20, 0); }
-        }
-
-        @keyframes pulse-red {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 49, 49, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 49, 49, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 49, 49, 0); }
-        }
-
-        /* Network Vis */
-        #network-vis {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Terminal */
-        .terminal {
-            font-size: 0.85rem;
-            color: var(--accent-cyan);
-            height: 300px;
-        }
-
-        .log-entry {
-            margin-bottom: 5px;
-            border-left: 2px solid var(--accent-cyan);
-            padding-left: 5px;
-        }
-
-        /* Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-        }
-
-        .stat-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            color: var(--accent-cyan);
-        }
+        .hologram-label { position: absolute; color: var(--cyan); font-size: 0.7rem; pointer-events: none; text-transform: uppercase; white-space: nowrap; }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">FRIDAY DATA CORE <small id="core-version" style="font-size: 0.6rem; vertical-align: middle; opacity: 0.7;">v3.0.0-EVO</small></div>
-        <div class="system-status">
-            <div id="pkt-time">PKT: --:--:--</div>
-            <div class="status-badge" id="sys-status">SYSTEM ONLINE</div>
-        </div>
-    </header>
-
-    <div id="approval-box" class="approval-overlay">
-        <h2 style="color: var(--accent-red);">APPROVAL REQUIRED</h2>
-        <p id="pending-action-text" style="color: #fff;"></p>
-        <button class="btn-approve" onclick="approveAction()">APPROVE MISSION PHASE</button>
+    <div id="canvas-container"></div>
+    <div id="network-container">
+        <div style="color: var(--cyan); padding: 10px; font-size: 0.7rem; border-bottom: 1px solid rgba(0,245,255,0.1);">NEURAL NETWORK GRAPH</div>
+        <svg id="network-svg" width="400" height="260"></svg>
     </div>
 
-    <main>
-        <!-- Agent Roster -->
-        <div class="panel">
-            <h3 style="color: var(--accent-cyan);">AGENT ROSTER</h3>
-            <div class="agent-list" id="agent-list">
-                <div class="agent-card">
-                    <div class="pulse"></div>
-                    <div>Friday CEO</div>
-                </div>
-                <div class="agent-card">
-                    <div class="pulse qa"></div>
-                    <div>QA Agent</div>
-                </div>
-                <!-- Dynamic Content -->
+    <div id="overlay">
+        <div class="panel top-bar">
+            <div class="logo">FRIDAY DATA CORE <small id="v-tag" style="font-size: 0.6rem;">OS v1.0-ALIVE</small></div>
+            <div style="display:flex; gap: 20px; align-items:center;">
+                <div id="clock" style="color:var(--cyan); font-family:'Orbitron'; font-size:0.9rem;">PKT 00:00:00</div>
+                <div id="core-status" style="color: #39ff14;">CONSCIOUS</div>
             </div>
         </div>
 
-        <!-- Network Vis -->
-        <div class="panel" style="padding: 0;">
-            <svg id="network-vis"></svg>
+        <div id="command-portal">
+            <input type="text" id="command-input" placeholder="GIVE COMMAND TO FRIDAY...">
         </div>
 
-        <!-- Mission Log & Stats -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div class="panel terminal">
-                <h3 style="color: var(--accent-cyan);">MISSION LOG</h3>
-                <div id="logs"></div>
-            </div>
-            <div class="panel">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="color: var(--accent-cyan);">CEO VOCAL OUTPUT</h3>
-                    <button id="voice-btn" style="background:none; border: 1px solid var(--accent-cyan); color: var(--accent-cyan); cursor: pointer; border-radius: 50%; width: 30px; height: 30px; font-size: 15px;">🎤</button>
-                </div>
-                <div id="vocal-output" style="font-style: italic; color: #aaa; margin-top: 10px;">"Awaiting commands..."</div>
-                <div id="voice-waves" style="display: none; justify-content: center; gap: 3px; height: 20px; align-items: center; margin-top: 10px;">
-                    <div class="wave" style="width:3px; height:10px; background:var(--accent-cyan); animation: wave 1s infinite;"></div>
-                    <div class="wave" style="width:3px; height:15px; background:var(--accent-cyan); animation: wave 1s infinite 0.2s;"></div>
-                    <div class="wave" style="width:3px; height:10px; background:var(--accent-cyan); animation: wave 1s infinite 0.4s;"></div>
-                </div>
-            </div>
+        <div class="panel agent-roster">
+            <div style="color: var(--cyan); margin-bottom: 10px; border-bottom: 1px solid var(--cyan);">NEURAL UNITS</div>
+            <div id="agent-list"></div>
+        </div>
 
-            <style>
-                @keyframes wave {
-                    0%, 100% { height: 10px; }
-                    50% { height: 20px; }
-                }
-            </style>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">MISSIONS</div>
-                    <div class="stat-value" id="stat-missions">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">AGENTS</div>
-                    <div class="stat-value" id="stat-agents">13</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">INTEL LEVEL</div>
-                    <div class="stat-value" id="stat-intel">100</div>
-                </div>
+        <div class="panel mission-log">
+            <div style="color: var(--purple); margin-bottom: 10px; border-bottom: 1px solid var(--purple); display:flex; justify-content:space-between;">
+                <span>MISSION LOGS</span>
+                <span id="vocal-indicator" style="font-size:0.6rem; color:var(--cyan); display:none;">CEO VOCAL ACTIVE</span>
+            </div>
+            <div id="ceo-vocal" style="color:var(--cyan); font-style:italic; margin-bottom:10px; font-size:0.8rem; min-height:1.2rem;"></div>
+            <div id="logs"></div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="panel stat-card">
+                <div class="stat-label">INTEL LEVEL</div>
+                <div id="intel-level" class="stat-val">1000</div>
+            </div>
+            <div class="panel stat-card">
+                <div class="stat-label">NEURAL NODES</div>
+                <div class="stat-val">4096</div>
+            </div>
+            <div class="panel stat-card">
+                <div class="stat-label">UPTIME</div>
+                <div id="uptime" class="stat-val">00:00:00</div>
             </div>
         </div>
-    </main>
+    </div>
 
     <script>
-        // PKT Time
-        function updateTime() {
-            const now = new Date();
-            const pkt = new Date(now.getTime() + (5 * 60 * 60 * 1000));
-            document.getElementById('pkt-time').innerText = 'PKT: ' + pkt.toISOString().substr(11, 8);
+        // --- THREE.JS HOLOGRAPHIC CORE ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Core Sphere (The Brain)
+        const geometry = new THREE.IcosahedronGeometry(2, 4);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x00f5ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3,
+            emissive: 0x00f5ff,
+            emissiveIntensity: 0.5
+        });
+        const core = new THREE.Mesh(geometry, material);
+        scene.add(core);
+
+        // Inner Core (The Pulse)
+        const innerGeo = new THREE.IcosahedronGeometry(1.2, 2);
+        const innerMat = new THREE.MeshBasicMaterial({ color: 0xbc13fe, wireframe: true, transparent: true, opacity: 0.8 });
+        const innerCore = new THREE.Mesh(innerGeo, innerMat);
+        scene.add(innerCore);
+
+        // Lights
+        const light = new THREE.PointLight(0x00f5ff, 2, 100);
+        light.position.set(0, 0, 10);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        camera.position.z = 8;
+
+        // --- DYNAMIC AGENT ORBITS ---
+        const agentsGroup = new THREE.Group();
+        scene.add(agentsGroup);
+        let agentMeshes = {};
+
+        function updateAgentsIn3D(agentData) {
+            agentData.forEach((a, i) => {
+                if (!agentMeshes[a.id]) {
+                    // Spawn new agent node
+                    const geo = new THREE.SphereGeometry(0.3, 16, 16);
+                    const mat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
+                    const mesh = new THREE.Mesh(geo, mat);
+
+                    // Orbital position
+                    const angle = (i / agentData.length) * Math.PI * 2;
+                    mesh.position.set(Math.cos(angle) * 4, Math.sin(angle) * 4, (Math.random() - 0.5) * 2);
+
+                    agentsGroup.add(mesh);
+                    agentMeshes[a.id] = mesh;
+                }
+            });
         }
-        setInterval(updateTime, 1000);
 
-        // D3.js Network Visualization
-        const svg = d3.select("#network-vis");
-        const width = 800;
-        const height = 600;
+        // --- ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            core.rotation.y += 0.005;
+            core.rotation.x += 0.002;
+            innerCore.rotation.y -= 0.01;
 
-        const nodes = [
-            { id: "CEO", group: 1 },
-            { id: "QA", group: 2 },
-            { id: "Python", group: 3 },
-            { id: "Excel", group: 3 },
-            { id: "ML", group: 3 },
-            { id: "DL", group: 3 },
-            { id: "Report", group: 3 },
-            { id: "PBI", group: 3 },
-            { id: "TBL", group: 3 },
-            { id: "Scout", group: 4 },
-            { id: "Live", group: 4 }
-        ];
+            // Core Pulsing
+            const scale = 1 + Math.sin(Date.now() * 0.002) * 0.1;
+            innerCore.scale.set(scale, scale, scale);
 
-        const links = [
-            { source: "CEO", target: "QA" },
-            { source: "CEO", target: "Python" },
-            { source: "CEO", target: "Excel" },
-            { source: "CEO", target: "ML" },
-            { source: "CEO", target: "DL" },
-            { source: "CEO", target: "Report" },
-            { source: "CEO", target: "PBI" },
-            { source: "CEO", target: "TBL" },
-            { source: "CEO", target: "Scout" },
-            { source: "Scout", target: "Live" }
-        ];
+            agentsGroup.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- CLOCK ---
+        function updateClock() {
+            const now = new Date();
+            // Convert to PKT (UTC+5)
+            const pkt = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (5 * 3600000));
+            document.getElementById('clock').innerText = "PKT " + pkt.toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000);
+
+        // --- D3 NETWORK GRAPH ---
+        const svg = d3.select("#network-svg");
+        const width = 400, height = 260;
+        let nodes = [{ id: "FRIDAY", group: 1 }];
+        let links = [];
 
         const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(150))
-            .force("charge", d3.forceManyBody().strength(-300))
-            .force("center", d3.forceCenter(400, 300));
+            .force("link", d3.forceLink(links).id(d => d.id).distance(80))
+            .force("charge", d3.forceManyBody().strength(-100))
+            .force("center", d3.forceCenter(width / 2, height / 2));
 
-        const link = svg.append("g")
-            .selectAll("line")
-            .data(links)
-            .enter().append("line")
-            .attr("stroke", "#00f5ff")
-            .attr("stroke-opacity", 0.6)
-            .attr("stroke-width", 2)
-            .attr("stroke-dasharray", "5,5");
+        const linkGroup = svg.append("g").attr("stroke", "rgba(0, 245, 255, 0.2)").attr("stroke-width", 1.5);
+        const nodeGroup = svg.append("g");
 
-        const node = svg.append("g")
-            .selectAll("circle")
-            .data(nodes)
-            .enter().append("circle")
-            .attr("r", 15)
-            .attr("fill", d => d.id === "CEO" ? "#bc13fe" : (d.id === "QA" ? "#ff3131" : "#00f5ff"))
-            .attr("stroke", "#fff")
-            .attr("stroke-width", 2);
+        function updateNetwork(data) {
+            nodes = data.nodes;
+            links = data.links;
 
-        node.append("title").text(d => d.id);
+            const link = linkGroup.selectAll("line").data(links, d => `${d.source.id || d.source}-${d.target.id || d.target}`);
+            link.exit().remove();
+            const linkEnter = link.enter().append("line")
+                .attr("stroke-dasharray", "5,5")
+                .style("animation", "dash 2s linear infinite");
 
-        simulation.on("tick", () => {
-            link.attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+            const node = nodeGroup.selectAll("circle").data(nodes, d => d.id);
+            node.exit().remove();
+            const nodeEnter = node.enter().append("circle")
+                .attr("r", d => d.id === "FRIDAY" ? 8 : 5)
+                .attr("fill", d => d.id === "FRIDAY" ? "var(--purple)" : "var(--cyan)")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
 
-            node.attr("cx", d => d.x)
-                .attr("cy", d => d.y);
-        });
+            nodeEnter.append("title").text(d => d.id);
 
-        // Voice Button Interaction
-        const voiceBtn = document.getElementById('voice-btn');
-        const voiceWaves = document.getElementById('voice-waves');
-        voiceBtn.onclick = () => {
-            voiceWaves.style.display = 'flex';
-            setTimeout(() => {
-                voiceWaves.style.display = 'none';
-            }, 3000);
-        };
+            simulation.nodes(nodes);
+            simulation.force("link").links(links);
+            simulation.alpha(1).restart();
 
-        async function approveAction() {
-            await fetch('http://localhost:8000/approve', {method: 'POST'});
-            document.getElementById('approval-box').style.display = 'none';
+            simulation.on("tick", () => {
+                linkGroup.selectAll("line")
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                nodeGroup.selectAll("circle")
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+            });
         }
 
-        // Polling API for state
+        function dragstarted(event) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+        }
+        function dragged(event) {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+        function dragended(event) {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+        }
+
+        // --- API POLLING ---
         async function fetchState() {
             try {
-                const response = await fetch('http://localhost:8000/state');
-                const state = await response.json();
+                const res = await fetch('http://localhost:8000/state');
+                const data = await res.json();
 
-                // Update Logs
-                const logContainer = document.getElementById('logs');
-                logContainer.innerHTML = '';
-                [...state.logs].reverse().forEach(log => {
-                    const entry = document.createElement('div');
-                    entry.className = 'log-entry';
-                    entry.innerText = `[${new Date(log.timestamp*1000).toLocaleTimeString()}] ${log.message}`;
-                    logContainer.appendChild(entry);
+                // Update UI
+                document.getElementById('intel-level').innerText = data.core.intel_level;
+                document.getElementById('uptime').innerText = new Date(data.uptime * 1000).toISOString().substr(11, 8);
+
+                // Logs & Vocal Output
+                const logBox = document.getElementById('logs');
+                const vocalBox = document.getElementById('ceo-vocal');
+                logBox.innerHTML = '';
+
+                let lastFridayMsg = "";
+                [...data.logs].reverse().forEach(l => {
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
+                    div.innerText = `[${new Date(l.timestamp*1000).toLocaleTimeString()}] ${l.message}`;
+                    logBox.appendChild(div);
+
+                    if (!lastFridayMsg && l.message.startsWith("FRIDAY:")) {
+                        lastFridayMsg = l.message.replace("FRIDAY:", "").trim();
+                    }
                 });
 
-                // Update Approval Overlay
-                if (state.approval_pending) {
-                    document.getElementById('approval-box').style.display = 'block';
-                    document.getElementById('pending-action-text').innerText = state.pending_action;
+                if (lastFridayMsg) {
+                    vocalBox.innerText = "CEO: " + lastFridayMsg;
+                    document.getElementById('vocal-indicator').style.display = 'block';
                 } else {
-                    document.getElementById('approval-box').style.display = 'none';
+                    document.getElementById('vocal-indicator').style.display = 'none';
                 }
 
-                // Update Stats
-                document.getElementById('stat-missions').innerText = state.mission_count;
-                document.getElementById('stat-intel').innerText = state.intelligence_level;
-                document.getElementById('core-version').innerText = state.core_version;
-
-                // Update CEO Vocal Output (last log)
-                if (state.logs.length > 0) {
-                    document.getElementById('vocal-output').innerText = `"${state.logs[state.logs.length-1].message}"`;
-                }
-
-                // Update Agent Roster Dynamically
-                const agentList = document.getElementById('agent-list');
-                agentList.innerHTML = '';
-                Object.keys(state.agent_vitals).forEach(agentName => {
-                    const agent = state.agent_vitals[agentName];
-                    const card = document.createElement('div');
-                    card.className = 'agent-card';
-                    card.innerHTML = `
-                        <div class="pulse ${agentName === 'QA Agent' ? 'qa' : ''}"></div>
-                        <div>${agentName} <small style="color:var(--accent-cyan)">${agent.progress}%</small></div>
+                // Agents
+                const agentBox = document.getElementById('agent-list');
+                agentBox.innerHTML = '';
+                data.agents.forEach(a => {
+                    const div = document.createElement('div');
+                    div.className = 'agent-card';
+                    div.innerHTML = `
+                        <div style="color:var(--cyan);font-weight:bold">${a.role}</div>
+                        <div>ID: ${a.id}</div>
+                        <div style="margin-top:5px;height:5px;background:#111;width:100%">
+                            <div style="height:100%;background:var(--cyan);width:${a.progress}%"></div>
+                        </div>
+                        <small>${a.status} (${a.progress}%)</small>
                     `;
-                    agentList.appendChild(card);
+                    agentBox.appendChild(div);
                 });
 
-            } catch (e) {
-                console.error("API Fetch Error", e);
-            }
+                updateAgentsIn3D(data.agents);
+                updateNetwork(data.knowledge_graph);
+
+            } catch (e) { console.error(e); }
         }
-        setInterval(fetchState, 3000);
+        setInterval(fetchState, 2000);
+
+        // --- COMMAND INPUT ---
+        const input = document.getElementById('command-input');
+        input.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const cmd = input.value;
+                input.value = '';
+                await fetch('http://localhost:8000/command', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({command: cmd})
+                });
+            }
+        });
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
     </script>
 </body>
 </html>
