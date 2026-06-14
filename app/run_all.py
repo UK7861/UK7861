@@ -30,6 +30,11 @@ def launch_friday():
         hud_process = subprocess.Popen([sys.executable, "-m", "http.server", "8080"], cwd="app")
         processes.append(hud_process)
 
+        # 5. Start Autopilot
+        print("Starting Autopilot Engine...")
+        autopilot_process = subprocess.Popen([sys.executable, "app/autopilot.py"])
+        processes.append(autopilot_process)
+
         print("\n✅ ALL SYSTEMS ONLINE")
         print("HUD Deck: http://localhost:8080")
         print("Management Room: http://localhost:8501")

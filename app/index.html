@@ -28,7 +28,16 @@
         .mission-log { bottom: 20px; right: 20px; width: 400px; height: 300px; overflow-y: auto; }
         .stat-grid { bottom: 20px; left: 20px; display: flex; gap: 15px; }
 
-        .agent-card { background: rgba(0,0,0,0.3); border-left: 3px solid var(--cyan); padding: 10px; margin-bottom: 10px; font-size: 0.8rem; }
+        .agent-card { background: rgba(0,0,0,0.3); border-left: 3px solid var(--cyan); padding: 10px; margin-bottom: 10px; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; }
+        .agent-card:hover { background: rgba(0, 245, 255, 0.1); border-left-width: 8px; }
+        .agent-card.qa-active { border-left-color: #ff0000; animation: pulse-red 2s infinite; }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+
         .log-entry { margin-bottom: 5px; font-size: 0.75rem; border-left: 2px solid var(--purple); padding-left: 5px; }
 
         .stat-card { text-align: center; min-width: 100px; }
@@ -38,6 +47,14 @@
         #command-input { width: 100%; background: none; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: 'Orbitron'; font-size: 1.2rem; text-align: center; outline: none; padding: 10px; }
 
         .hologram-label { position: absolute; color: var(--cyan); font-size: 0.7rem; pointer-events: none; text-transform: uppercase; white-space: nowrap; }
+
+        /* Modal */
+        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; pointer-events: auto; }
+        .modal { background: var(--bg); border: 2px solid var(--cyan); padding: 30px; border-radius: 10px; width: 400px; box-shadow: 0 0 30px var(--cyan); }
+        .modal-header { font-family: 'Orbitron'; color: var(--cyan); font-size: 1.5rem; margin-bottom: 20px; border-bottom: 1px solid var(--cyan); }
+        .close-btn { color: #fff; float: right; cursor: pointer; }
+
+        @keyframes dash { to { stroke-dashoffset: -20; } }
     </style>
 </head>
 <body>
@@ -45,6 +62,14 @@
     <div id="network-container">
         <div style="color: var(--cyan); padding: 10px; font-size: 0.7rem; border-bottom: 1px solid rgba(0,245,255,0.1);">NEURAL NETWORK GRAPH</div>
         <svg id="network-svg" width="400" height="260"></svg>
+    </div>
+
+    <div id="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModal()">[X]</span>
+            <div class="modal-header">AGENT VITALS</div>
+            <div id="modal-content"></div>
+        </div>
     </div>
 
     <div id="overlay">
@@ -241,6 +266,25 @@
             event.subject.fy = null;
         }
 
+        // --- MODAL ---
+        function openAgentModal(agent) {
+            const overlay = document.getElementById('modal-overlay');
+            const content = document.getElementById('modal-content');
+            content.innerHTML = `
+                <div style="margin-bottom:15px"><strong>ROLE:</strong> ${agent.role}</div>
+                <div style="margin-bottom:15px"><strong>GOAL:</strong> ${agent.goal}</div>
+                <div style="margin-bottom:15px"><strong>STATUS:</strong> ${agent.status}</div>
+                <div style="margin-bottom:15px"><strong>PROGRESS:</strong> ${agent.progress}%</div>
+                <div style="margin-bottom:15px"><strong>NEURAL LOAD:</strong> ${agent.load}%</div>
+                <div style="margin-bottom:15px"><strong>SYSTEM INTEGRITY:</strong> ${agent.health}%</div>
+            `;
+            overlay.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
         // --- API POLLING ---
         async function fetchState() {
             try {
@@ -248,7 +292,14 @@
                 const data = await res.json();
 
                 // Update UI
-                document.getElementById('intel-level').innerText = data.core.intel_level;
+                const intelEl = document.getElementById('intel-level');
+                if (intelEl.innerText != data.core.intel_level) {
+                    gsap.to(intelEl, {
+                        innerText: data.core.intel_level,
+                        duration: 1,
+                        snap: { innerText: 1 }
+                    });
+                }
                 document.getElementById('uptime').innerText = new Date(data.uptime * 1000).toISOString().substr(11, 8);
 
                 // Logs & Vocal Output
@@ -280,7 +331,8 @@
                 agentBox.innerHTML = '';
                 data.agents.forEach(a => {
                     const div = document.createElement('div');
-                    div.className = 'agent-card';
+                    div.className = 'agent-card' + (a.role === 'QA Agent' ? ' qa-active' : '');
+                    div.onclick = () => openAgentModal(a);
                     div.innerHTML = `
                         <div style="color:var(--cyan);font-weight:bold">${a.role}</div>
                         <div>ID: ${a.id}</div>
