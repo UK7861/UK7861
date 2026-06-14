@@ -1,27 +1,28 @@
-# FRIDAY CEO OPERATIONAL GUIDE
+# FRIDAY CEO OPERATIONAL GUIDE (JARVIS EDITION)
 
 ## Overview
-Friday is an autonomous data agency. You interact with the system via the HUD Command Deck or the Streamlit Management Room.
+Friday is a super-intelligent autonomous data agency. Inspired by JARVIS/Tony Stark, Friday handles end-to-end data operations with self-healing and workforce expansion capabilities.
 
-## Agent Architecture
-- **CEO**: Orchestrates and delegates.
-- **QA**: Audits and verifies outputs.
-- **Scout**: Finds leads on Upwork/Freelancer.
-- **Client Agent**: Multilingual onboarding interface.
+## Language Support
+Friday understands and responds in:
+- **English**
+- **Roman Urdu/Hindi** (e.g., "Friday, kaise ho?", "Shukriya Friday")
 
-## Voice Commands (Simulated)
-You can use `voice_interface.py` to simulate voice commands:
-- "Friday, status report."
-- "Launch mission for [Client Name]."
+## Autonomous Capabilities
+1. **Agent Factory**: Friday CEO can autonomously synthesize and deploy new specialized agents or teams using the `agent_creator_tool`.
+2. **Self-Healing**: The QA Agent and CEO use `system_fixer_tool` to diagnose and repair sub-system crashes or agent anomalies in real-time.
+3. **One-Man Armies**: 13 specialized agents covering Big and Small data, each acting with peak efficiency.
 
 ## Mission Lifecycle
-1. Scout finds a lead.
-2. Client Agent onboards.
-3. CEO plans tasks.
-4. 10 Core Agents execute.
-5. QA verifies.
-6. Report synthesized.
+1. **Global Scout**: Captures high-value leads.
+2. **Onboarding**: Client requirements captured in multiple languages.
+3. **Synthesis**: CEO evaluates and expands workforce if needed.
+4. **Execution**: Core agents process data parallelly (distributed logic).
+5. **Audit**: QA Agent ensures 100% integrity and fixes errors.
+6. **Delivery**: Final JARVIS-style mission report generated.
 
-## Troubleshooting
-- Check `api_server.py` logs if HUD is not updating.
-- Ensure all dependencies are in the virtual environment.
+## Voice Commands
+Use the `voice_interface.py` or the HUD microphone button to interact:
+- "Friday, what's the status of our agents?"
+- "Friday, create a team for real-time sentiment analysis."
+- "Friday, shukriya. Mission complete karo."

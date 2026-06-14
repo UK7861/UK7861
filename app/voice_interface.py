@@ -1,21 +1,45 @@
 import requests
 import time
+import random
 
 API_URL = "http://localhost:8000"
 
-def simulate_voice_command(command: str):
-    print(f"Voice Command Received: {command}")
+def simulate_tts(text: str):
+    """Simulates Text-to-Speech output (JARVIS voice)."""
+    print(f"\n[FRIDAY VOICE]: {text}")
+    # In a real app, you'd use a library like pyttsx3 or gTTS here
+
+def simulate_stt(audio_input: str):
+    """Simulates Speech-to-Text input."""
+    # This mock converts "voice input" strings into commands
+    print(f"[USER VOICE]: {audio_input}")
+    return audio_input
+
+def process_voice_command(voice_command: str):
+    command = simulate_stt(voice_command)
     requests.post(f"{API_URL}/log", json={"message": f"VOICE COMMAND: {command}", "level": "INFO"})
 
-    # Process common commands
+    # Logic for response
     if "status" in command.lower():
-        print("Friday CEO: All systems are operational and agents are on standby.")
-    elif "start mission" in command.lower():
-        print("Friday CEO: Initiating new mission sequence.")
+        resp = "Systems are nominal, Boss. 13 agents are online and standing by."
+    elif "create" in command.lower() or "agent" in command.lower():
+        resp = "Initiating Agent Factory. Synthesizing new specialized unit as requested."
+    elif "shukriya" in command.lower() or "kaise ho" in command.lower():
+        resp = "Shukriya Boss! Main bilkul theek hoon, aapka shukriya. Mission ki tayyari mukammal hai."
     else:
-        print(f"Friday CEO: Processing command: {command}")
+        resp = f"Processing command: {command}. Executing Friday protocols."
+
+    simulate_tts(resp)
+    requests.post(f"{API_URL}/log", json={"message": f"CEO VOCAL: {resp}", "level": "SUCCESS"})
 
 if __name__ == "__main__":
-    simulate_voice_command("Friday, status report please.")
-    time.sleep(2)
-    simulate_voice_command("Start mission: Analyze quarterly sales data.")
+    commands = [
+        "Friday, status report please.",
+        "Friday, create a new team for Deep Web Scraping.",
+        "Friday, kaise ho? Status check karo.",
+        "Mission start karo: Analyze retail data."
+    ]
+
+    for cmd in commands:
+        process_voice_command(cmd)
+        time.sleep(2)

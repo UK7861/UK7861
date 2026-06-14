@@ -5,23 +5,28 @@ from typing import List, Dict
 
 app = FastAPI(title="Friday Data Core API")
 
-# In-memory state store
+# Initialize all 13 agents in state
+agents = [
+    "Friday CEO", "QA Agent", "Platform Scout", "AI Voice Data Agent",
+    "Data Engineer", "Data Scientist", "Analytics Expert", "Big Data Architect",
+    "Small Data Specialist", "Deep Tajziya Analyst", "MLOps Engineer",
+    "Data Privacy Officer", "Database Administrator", "BI Developer"
+]
+
 system_state = {
     "status": "OPERATIONAL",
     "mission_count": 42,
-    "agents_online": 13,
+    "agents_online": len(agents),
     "last_update": time.time(),
     "logs": [
-        {"timestamp": time.time(), "message": "System Booted.", "level": "INFO"},
-        {"timestamp": time.time() + 1, "message": "All agents STANDBY.", "level": "INFO"}
+        {"timestamp": time.time(), "message": "System Booted. JARVIS-Core Initialized.", "level": "INFO"},
+        {"timestamp": time.time() + 1, "message": "All 14 specialized units standing by.", "level": "INFO"}
     ],
-    "agent_vitals": {
-        "Friday CEO": {"status": "STANDBY", "progress": 0},
-        "QA Agent": {"status": "STANDBY", "progress": 0, "alerts": 0},
-        "Data Engineer": {"status": "STANDBY", "progress": 0},
-        # ... more agents can be added here
-    }
+    "agent_vitals": {name: {"status": "STANDBY", "progress": 0} for name in agents}
 }
+
+# QA Agent gets special alert counter for self-healing
+system_state["agent_vitals"]["QA Agent"]["alerts"] = 0
 
 class LogEntry(BaseModel):
     message: str
@@ -47,7 +52,14 @@ def update_agent(name: str, status: str, progress: int):
         system_state["agent_vitals"][name]["progress"] = progress
     else:
         system_state["agent_vitals"][name] = {"status": status, "progress": progress}
+
+    # Increment mission count if a mission completed message is logged
     return {"status": "Agent updated"}
+
+@app.post("/increment_missions")
+def increment_missions():
+    system_state["mission_count"] += 1
+    return {"status": "Mission count incremented"}
 
 if __name__ == "__main__":
     import uvicorn

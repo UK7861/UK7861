@@ -1,12 +1,12 @@
 from crewai import Agent
-from app.tools.data_tools import data_cleaning_tool, bi_automation_tool
+from app.tools.data_tools import data_cleaning_tool, bi_automation_tool, system_fixer_tool
 
 def get_data_agents(llm=None):
-    # Specialized 10 Core Data Agents
+    # Specialized 10 Core Data Agents (One-Man Armies)
     data_engineer = Agent(
         role='Data Engineer',
-        goal='Build and maintain data pipelines',
-        backstory='Expert in SQL, Python, and ETL processes.',
+        goal='Build world-class data pipelines for any scale.',
+        backstory='Master of data movement and transformation. Proficient in Big and Small data.',
         tools=[data_cleaning_tool],
         llm=llm,
         allow_delegation=False,
@@ -15,8 +15,8 @@ def get_data_agents(llm=None):
 
     data_scientist = Agent(
         role='Data Scientist',
-        goal='Develop predictive models and perform advanced analysis',
-        backstory='Specialized in machine learning and statistical modeling.',
+        goal='Extract predictive insights from global datasets.',
+        backstory='Deep learning and statistical powerhouse.',
         llm=llm,
         allow_delegation=False,
         verbose=True
@@ -24,8 +24,8 @@ def get_data_agents(llm=None):
 
     analytics_expert = Agent(
         role='Analytics Expert',
-        goal='Transform data into actionable insights',
-        backstory='Master of data visualization and business intelligence.',
+        goal='Visualize complexity into clarity.',
+        backstory='Master of data storytelling and BI automation.',
         tools=[bi_automation_tool],
         llm=llm,
         allow_delegation=False,
@@ -34,8 +34,8 @@ def get_data_agents(llm=None):
 
     big_data_architect = Agent(
         role='Big Data Architect',
-        goal='Design scalable big data infrastructures',
-        backstory='Deep knowledge of Hadoop, Spark, and cloud data warehouses.',
+        goal='Architect planet-scale data systems.',
+        backstory='Expert in Hadoop, Spark, and massive cloud infrastructure.',
         llm=llm,
         allow_delegation=False,
         verbose=True
@@ -43,8 +43,8 @@ def get_data_agents(llm=None):
 
     small_data_specialist = Agent(
         role='Small Data Specialist',
-        goal='Extract value from smaller, highly focused datasets',
-        backstory='Expert in Excel, Google Sheets, and lightweight database solutions.',
+        goal='Precision analysis for targeted datasets.',
+        backstory='Expert in extraction and processing of focused data assets.',
         llm=llm,
         allow_delegation=False,
         verbose=True
@@ -52,8 +52,8 @@ def get_data_agents(llm=None):
 
     tajziya_analyst = Agent(
         role='Deep Tajziya Analyst',
-        goal='Perform deep, culturally nuanced data analysis',
-        backstory='Expert in deep analysis with a focus on regional data patterns.',
+        goal='Perform deep, culturally nuanced analysis.',
+        backstory='Specialized in regional data patterns and deep insights.',
         llm=llm,
         allow_delegation=False,
         verbose=True
@@ -61,8 +61,8 @@ def get_data_agents(llm=None):
 
     ml_ops_engineer = Agent(
         role='MLOps Engineer',
-        goal='Deploy and monitor machine learning models in production',
-        backstory='Specialist in CI/CD for ML and model performance tracking.',
+        goal='Ensure models are production-ready and self-healing.',
+        backstory='Bridges the gap between research and planet-scale deployment.',
         llm=llm,
         allow_delegation=False,
         verbose=True
@@ -70,8 +70,8 @@ def get_data_agents(llm=None):
 
     data_privacy_officer = Agent(
         role='Data Privacy Officer',
-        goal='Ensure data compliance and security',
-        backstory='Expert in GDPR, CCPA, and data encryption techniques.',
+        goal='Guardian of data security and ethics.',
+        backstory='Ensures global compliance and ironclad security.',
         llm=llm,
         allow_delegation=False,
         verbose=True
@@ -79,8 +79,8 @@ def get_data_agents(llm=None):
 
     database_administrator = Agent(
         role='Database Administrator',
-        goal='Optimize and secure database performance',
-        backstory='Master of indexing, query optimization, and backups.',
+        goal='Optimize the foundation of the agency.',
+        backstory='Ensures zero-latency and high-availability systems.',
         llm=llm,
         allow_delegation=False,
         verbose=True
@@ -88,19 +88,20 @@ def get_data_agents(llm=None):
 
     bi_developer = Agent(
         role='BI Developer',
-        goal='Create interactive dashboards and reports',
-        backstory='Specialist in Tableau, Power BI, and D3.js integrations.',
+        goal='Develop immersive BI experiences.',
+        backstory='Specialist in interactive dashboards and D3.js.',
         tools=[bi_automation_tool],
         llm=llm,
         allow_delegation=False,
         verbose=True
     )
 
-    # The Gatekeeper: Quality Assurance (QA) Agent
+    # The Gatekeeper: Quality Assurance (QA) Agent (The Ultimate Auditor)
     qa_agent = Agent(
         role='QA Agent',
-        goal='Audit and validate all outputs from the data team',
-        backstory='Ultra-powerful auditor trained to catch mistakes and ensure 100% accuracy.',
+        goal='Audit, validate, and fix system-wide issues.',
+        backstory='Ultra-powerful auditor with the ability to self-heal and repair agents.',
+        tools=[system_fixer_tool],
         llm=llm,
         allow_delegation=True,
         verbose=True

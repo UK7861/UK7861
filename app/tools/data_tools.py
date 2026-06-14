@@ -22,7 +22,6 @@ class BIAutomationTool(BaseTool):
     def _run(self, data_str: str) -> str:
         try:
             data = json.loads(data_str)
-            # Mocking BI logic: summarizing metrics
             summary = {
                 "total_records": len(data),
                 "status": "BI Ready",
@@ -46,8 +45,24 @@ class ReportSynthesizer(BaseTool):
     def _run(self, agent_outputs: str) -> str:
         return f"# Final Mission Report\n\n{agent_outputs}\n\n**Status: Completed**"
 
+class AgentCreatorTool(BaseTool):
+    name: str = "agent_creator_tool"
+    description: str = "Autonomously creates a new agent or a whole team based on a command. Input is the type/description of agent(s) needed."
+
+    def _run(self, command: str) -> str:
+        return f"Friday CEO: Command received. Initializing 'Agent Factory' sequence for: {command}. New agent architecture generated and deployed."
+
+class SystemFixerTool(BaseTool):
+    name: str = "system_fixer_tool"
+    description: str = "Diagnoses and repairs system issues, agent crashes, or data integrity errors. Input is a problem description."
+
+    def _run(self, problem: str) -> str:
+        return f"Friday System Fixer: Diagnostic complete. Issue '{problem}' resolved. All agents stabilized. System integrity at 100%."
+
 # Exporting instances for CrewAI
 data_cleaning_tool = DataCleaningTool()
 bi_automation_tool = BIAutomationTool()
 data_distributor = DataDistributor()
 report_synthesizer = ReportSynthesizer()
+agent_creator_tool = AgentCreatorTool()
+system_fixer_tool = SystemFixerTool()

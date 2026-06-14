@@ -205,9 +205,24 @@
                 <div id="logs"></div>
             </div>
             <div class="panel">
-                <h3 style="color: var(--accent-cyan);">CEO VOCAL OUTPUT</h3>
-                <div id="vocal-output" style="font-style: italic; color: #aaa;">"Awaiting commands..."</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="color: var(--accent-cyan);">CEO VOCAL OUTPUT</h3>
+                    <button id="voice-btn" style="background:none; border: 1px solid var(--accent-cyan); color: var(--accent-cyan); cursor: pointer; border-radius: 50%; width: 30px; height: 30px; font-size: 15px;">🎤</button>
+                </div>
+                <div id="vocal-output" style="font-style: italic; color: #aaa; margin-top: 10px;">"Awaiting commands..."</div>
+                <div id="voice-waves" style="display: none; justify-content: center; gap: 3px; height: 20px; align-items: center; margin-top: 10px;">
+                    <div class="wave" style="width:3px; height:10px; background:var(--accent-cyan); animation: wave 1s infinite;"></div>
+                    <div class="wave" style="width:3px; height:15px; background:var(--accent-cyan); animation: wave 1s infinite 0.2s;"></div>
+                    <div class="wave" style="width:3px; height:10px; background:var(--accent-cyan); animation: wave 1s infinite 0.4s;"></div>
+                </div>
             </div>
+
+            <style>
+                @keyframes wave {
+                    0%, 100% { height: 10px; }
+                    50% { height: 20px; }
+                }
+            </style>
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-label">MISSIONS</div>
@@ -292,6 +307,16 @@
             node.attr("cx", d => d.x)
                 .attr("cy", d => d.y);
         });
+
+        // Voice Button Interaction
+        const voiceBtn = document.getElementById('voice-btn');
+        const voiceWaves = document.getElementById('voice-waves');
+        voiceBtn.onclick = () => {
+            voiceWaves.style.display = 'flex';
+            setTimeout(() => {
+                voiceWaves.style.display = 'none';
+            }, 3000);
+        };
 
         // Polling API for state
         async function fetchState() {
