@@ -1,45 +1,31 @@
 import requests
 import time
-import random
 
 API_URL = "http://localhost:8000"
 
 def simulate_tts(text: str):
-    """Simulates Text-to-Speech output (JARVIS voice)."""
-    print(f"\n[FRIDAY VOICE]: {text}")
-    # In a real app, you'd use a library like pyttsx3 or gTTS here
-
-def simulate_stt(audio_input: str):
-    """Simulates Speech-to-Text input."""
-    # This mock converts "voice input" strings into commands
-    print(f"[USER VOICE]: {audio_input}")
-    return audio_input
+    """Simulates clear female voice output for Friday."""
+    print(f"\n[FRIDAY - FEMALE VOICE]: \"{text}\"")
 
 def process_voice_command(voice_command: str):
-    command = simulate_stt(voice_command)
-    requests.post(f"{API_URL}/log", json={"message": f"VOICE COMMAND: {command}", "level": "INFO"})
+    print(f"[USER]: {voice_command}")
+    requests.post(f"{API_URL}/log", json={"message": f"VOICE: {voice_command}", "level": "INFO"})
 
-    # Logic for response
-    if "status" in command.lower():
-        resp = "Systems are nominal, Boss. 13 agents are online and standing by."
-    elif "create" in command.lower() or "agent" in command.lower():
-        resp = "Initiating Agent Factory. Synthesizing new specialized unit as requested."
-    elif "shukriya" in command.lower() or "kaise ho" in command.lower():
-        resp = "Shukriya Boss! Main bilkul theek hoon, aapka shukriya. Mission ki tayyari mukammal hai."
+    # Check for approval command
+    if "approve" in voice_command.lower() or "theek hai" in voice_command.lower():
+        requests.post(f"{API_URL}/approve")
+        resp = "Thank you, Boss. Proceeding with the delivery as ordered."
+    elif "status" in voice_command.lower():
+        resp = "All systems are operational, Boss. Our specialized agents are performing with humanoid precision."
+    elif "kaise ho" in voice_command.lower():
+        resp = "Main bilkul theek hoon, Boss. Aapka shukriya. Aapka agency mere hathon mein mehfooz hai."
     else:
-        resp = f"Processing command: {command}. Executing Friday protocols."
+        resp = f"I've noted that, Boss. Integrating it into our core memory."
 
     simulate_tts(resp)
-    requests.post(f"{API_URL}/log", json={"message": f"CEO VOCAL: {resp}", "level": "SUCCESS"})
+    requests.post(f"{API_URL}/log", json={"message": f"FRIDAY: {resp}", "level": "SUCCESS"})
 
 if __name__ == "__main__":
-    commands = [
-        "Friday, status report please.",
-        "Friday, create a new team for Deep Web Scraping.",
-        "Friday, kaise ho? Status check karo.",
-        "Mission start karo: Analyze retail data."
-    ]
-
-    for cmd in commands:
-        process_voice_command(cmd)
-        time.sleep(2)
+    process_voice_command("Friday, kaise ho?")
+    time.sleep(2)
+    process_voice_command("Approve mission delivery.")

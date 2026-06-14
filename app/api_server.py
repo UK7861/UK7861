@@ -14,6 +14,8 @@ agents = [
 
 system_state = {
     "status": "OPERATIONAL",
+    "approval_pending": False,
+    "pending_action": None,
     "mission_count": 42,
     "intelligence_level": 150,
     "core_version": "4.0.0-HUMAN",
@@ -58,6 +60,18 @@ def upgrade_core():
     patch = str(int(patch) + 1)
     system_state["core_version"] = f"{major}.{minor}.{patch}-HUMAN"
     return {"status": "Core evolved", "new_level": system_state["intelligence_level"]}
+
+@app.post("/request_approval")
+def request_approval(action: str):
+    system_state["approval_pending"] = True
+    system_state["pending_action"] = action
+    return {"status": "Approval requested"}
+
+@app.post("/approve")
+def approve():
+    system_state["approval_pending"] = False
+    system_state["pending_action"] = None
+    return {"status": "Action approved"}
 
 if __name__ == "__main__":
     import uvicorn

@@ -62,6 +62,33 @@
             box-shadow: 0 0 5px var(--accent-green);
         }
 
+        .approval-overlay {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 10, 15, 0.95);
+            border: 2px solid var(--accent-red);
+            padding: 30px;
+            border-radius: 15px;
+            z-index: 1000;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 30px var(--accent-red);
+        }
+
+        .btn-approve {
+            background: var(--accent-green);
+            border: none;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            margin-top: 20px;
+        }
+
         /* Main Layout */
         main {
             display: grid;
@@ -175,6 +202,12 @@
             <div class="status-badge" id="sys-status">SYSTEM ONLINE</div>
         </div>
     </header>
+
+    <div id="approval-box" class="approval-overlay">
+        <h2 style="color: var(--accent-red);">APPROVAL REQUIRED</h2>
+        <p id="pending-action-text" style="color: #fff;"></p>
+        <button class="btn-approve" onclick="approveAction()">APPROVE MISSION PHASE</button>
+    </div>
 
     <main>
         <!-- Agent Roster -->
@@ -322,6 +355,11 @@
             }, 3000);
         };
 
+        async function approveAction() {
+            await fetch('http://localhost:8000/approve', {method: 'POST'});
+            document.getElementById('approval-box').style.display = 'none';
+        }
+
         // Polling API for state
         async function fetchState() {
             try {
@@ -337,6 +375,14 @@
                     entry.innerText = `[${new Date(log.timestamp*1000).toLocaleTimeString()}] ${log.message}`;
                     logContainer.appendChild(entry);
                 });
+
+                // Update Approval Overlay
+                if (state.approval_pending) {
+                    document.getElementById('approval-box').style.display = 'block';
+                    document.getElementById('pending-action-text').innerText = state.pending_action;
+                } else {
+                    document.getElementById('approval-box').style.display = 'none';
+                }
 
                 // Update Stats
                 document.getElementById('stat-missions').innerText = state.mission_count;

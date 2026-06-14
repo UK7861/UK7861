@@ -18,6 +18,12 @@ with col1:
         response = requests.get(f"{API_URL}/state")
         state = response.json()
 
+        if state["approval_pending"]:
+            st.warning(f"⚠️ APPROVAL REQUIRED: {state['pending_action']}")
+            if st.button("CONFIRM ACTION"):
+                requests.post(f"{API_URL}/approve")
+                st.success("Action confirmed.")
+
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Health", state["status"])
         m2.metric("Missions", state["mission_count"])

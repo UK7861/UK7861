@@ -8,6 +8,23 @@ from app.tools.data_tools import (
     evolution_tool, live_data_stream_tool, document_generation_tool
 )
 import os
+import requests
+import time
+
+API_URL = "http://localhost:8000"
+
+def wait_for_boss_approval(action_description):
+    print(f"Friday: Boss, I need your approval to {action_description}. Waiting...")
+    requests.post(f"{API_URL}/request_approval", params={"action": action_description})
+    requests.post(f"{API_URL}/log", json={"message": f"WAITING FOR APPROVAL: {action_description}", "level": "WARNING"})
+
+    while True:
+        state = requests.get(f"{API_URL}/state").json()
+        if not state["approval_pending"]:
+            print("Friday: Approval received. Proceeding.")
+            requests.post(f"{API_URL}/log", json={"message": f"APPROVAL RECEIVED: {action_description}", "level": "SUCCESS"})
+            break
+        time.sleep(2)
 
 def run_agency_mission(client_requirements):
     # Initialize Mock JARVIS LLM
@@ -50,9 +67,11 @@ def run_agency_mission(client_requirements):
         ) for agent in data_team
     ]
 
-    # 5. Human-like Report Generation
+    # 5. Human-like Report Generation (Requires Approval)
+    wait_for_boss_approval("Deliver final reports and fixed data to client")
+
     report_task = Task(
-        description="Generate the final mission reports (PDF/Word/Excel) with human-like writing and deep insights.",
+        description="Generate the final mission reports (PDF/Word/Excel/PPT) with human-like writing and deep insights.",
         agent=ceo, # CEO oversees final human-like touch
         tools=[document_generation_tool, report_synthesizer],
         expected_output="Final Humanoid Report Suite."

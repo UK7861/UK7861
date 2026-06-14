@@ -1,5 +1,8 @@
 from crewai import Agent
-from app.tools.data_tools import data_cleaning_tool, bi_automation_tool, system_fixer_tool, document_generation_tool
+from app.tools.data_tools import (
+    data_cleaning_tool, bi_automation_tool, system_fixer_tool,
+    document_generation_tool, sql_query_master_tool
+)
 
 def get_data_agents(llm=None):
     # Specialized "One-Man Army" Agents
@@ -8,6 +11,15 @@ def get_data_agents(llm=None):
         goal='Handle all Python-related work from A to Z, including automation, backend logic, and scripting.',
         backstory='Master of the Python ecosystem. Capable of building anything from simple scripts to complex AI-driven backends autonomously.',
         tools=[data_cleaning_tool],
+        llm=llm,
+        verbose=True
+    )
+
+    sql_overlord = Agent(
+        role='SQL Overlord',
+        goal='Handle all SQL-related work from A to Z, including schema design, query optimization, and complex extractions.',
+        backstory='The ultimate authority on databases. Expert in PostgreSQL, MySQL, and NoSQL. Ensures data is always structured and accessible.',
+        tools=[sql_query_master_tool],
         llm=llm,
         verbose=True
     )
@@ -22,8 +34,8 @@ def get_data_agents(llm=None):
 
     humanoid_report_generator = Agent(
         role='Humanoid Report Generator',
-        goal='Create Word, PDF, and Excel reports that look like they were written by a highly skilled human.',
-        backstory='Specialized in natural language generation and professional document design. Every report is a masterpiece of clarity and human touch.',
+        goal='Create high-end Word, PDF, Excel, and Presentation (PPT) reports with human-like writing.',
+        backstory='Specialized in natural language generation, professional document design, and persuasive presentations. Reports and slides are indistinguishable from high-end human work.',
         tools=[document_generation_tool],
         llm=llm,
         verbose=True
@@ -66,6 +78,7 @@ def get_data_agents(llm=None):
     )
 
     return [
-        python_overlord, excel_master, humanoid_report_generator,
-        ml_oracle, dl_strategist, analytics_expert
+        python_overlord, sql_overlord, excel_master,
+        humanoid_report_generator, ml_oracle, dl_strategist,
+        analytics_expert
     ], qa_agent

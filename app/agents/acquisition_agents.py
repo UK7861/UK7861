@@ -1,12 +1,15 @@
 from crewai import Agent
-from app.tools.data_tools import data_distributor, agent_creator_tool, system_fixer_tool, evolution_tool
+from app.tools.data_tools import (
+    data_distributor, agent_creator_tool, system_fixer_tool,
+    evolution_tool, persistent_memory_tool
+)
 
 def get_acquisition_agents(llm=None):
     friday_ceo = Agent(
         role='Friday CEO',
-        goal='Orchestrate the agency and continuously self-evolve.',
-        backstory='The central JARVIS-inspired digital brain. Decisive, strategic, and self-improving.',
-        tools=[data_distributor, agent_creator_tool, system_fixer_tool, evolution_tool],
+        goal='Orchestrate the agency, continuously self-evolve, and maintain persistent memory of all interactions.',
+        backstory='The central JARVIS-inspired digital brain. Remembers everything the Boss says. Strategic, protective, and self-improving. Never forgets a past detail.',
+        tools=[data_distributor, agent_creator_tool, system_fixer_tool, evolution_tool, persistent_memory_tool],
         llm=llm,
         verbose=True
     )

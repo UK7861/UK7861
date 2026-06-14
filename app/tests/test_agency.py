@@ -10,8 +10,8 @@ def test_agent_counts():
     ceo, scout = get_acquisition_agents()
     client_liaison = get_client_agent()
 
-    # Updated for v4.0 Roster
-    assert len(data_team) == 6
+    # Updated for v5.0 Roster (SQL Overlord added)
+    assert len(data_team) == 7
     assert qa.role == 'QA Agent'
     assert ceo.role == 'Friday CEO'
     assert scout.role == 'JARVIS Scout & Liaison'

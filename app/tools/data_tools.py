@@ -80,6 +80,21 @@ class LiveDataStreamTool(BaseTool):
     def _run(self, stream_data: str) -> str:
         return f"Live Data Stream: Captured and synced '{stream_data}' to Friday Live Server in real-time."
 
+class PersistentMemoryTool(BaseTool):
+    name: str = "persistent_memory_tool"
+    description: str = "Stores and retrieves historical mission data, user commands, and past interactions to ensure long-term recall. Input is a search query or data to store."
+
+    def _run(self, query: str) -> str:
+        # Mocking memory retrieval
+        return f"Friday Memory: Recalling past interaction related to '{query}'. Found archived data from Mission Alpha. Context synchronized."
+
+class SQLQueryMasterTool(BaseTool):
+    name: str = "sql_query_master_tool"
+    description: str = "Handles all SQL operations from A to Z: query optimization, schema design, and data extraction. Input is the SQL requirement."
+
+    def _run(self, requirement: str) -> str:
+        return f"SQL Master: Query executed for '{requirement}'. Database optimized and results extracted."
+
 # Exporting instances for CrewAI
 data_cleaning_tool = DataCleaningTool()
 bi_automation_tool = BIAutomationTool()
@@ -90,3 +105,5 @@ system_fixer_tool = SystemFixerTool()
 evolution_tool = EvolutionTool()
 document_generation_tool = DocumentGenerationTool()
 live_data_stream_tool = LiveDataStreamTool()
+persistent_memory_tool = PersistentMemoryTool()
+sql_query_master_tool = SQLQueryMasterTool()
