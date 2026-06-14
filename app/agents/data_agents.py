@@ -57,11 +57,20 @@ def get_data_agents(llm=None):
         verbose=True
     )
 
-    # Secondary specialized agents (still acting as one-man armies)
-    analytics_expert = Agent(
-        role='Analytics Expert',
-        goal='Transform raw data into actionable business intelligence.',
-        backstory='Expert in Tableau, Power BI, and interactive analytics.',
+    # Specialized BI "One-Man Army" Agents
+    power_bi_commander = Agent(
+        role='Power BI Commander',
+        goal='Automatically create world-class Power BI dashboards from A to Z based on client requirements.',
+        backstory='The absolute authority on DAX, Power Query, and interactive storytelling in the Power BI ecosystem. Delivers dashboards that reveal the hidden truth in data.',
+        tools=[bi_automation_tool],
+        llm=llm,
+        verbose=True
+    )
+
+    tableau_viz_architect = Agent(
+        role='Tableau Viz Architect',
+        goal='Automatically design stunning, high-performance Tableau dashboards from A to Z.',
+        backstory='Master of visual analytics and data artistry. Converts complex data into immersive Tableau experiences that clients love.',
         tools=[bi_automation_tool],
         llm=llm,
         verbose=True
@@ -80,5 +89,5 @@ def get_data_agents(llm=None):
     return [
         python_overlord, sql_overlord, excel_master,
         humanoid_report_generator, ml_oracle, dl_strategist,
-        analytics_expert
+        power_bi_commander, tableau_viz_architect
     ], qa_agent

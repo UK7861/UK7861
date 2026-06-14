@@ -5,11 +5,12 @@ from typing import List, Dict
 
 app = FastAPI(title="Friday Data Core API")
 
-# Updated Roster for JARVIS-Core v4.0
+# Updated Roster for JARVIS-Core v6.0
 agents = [
     "Friday CEO", "QA Agent", "JARVIS Scout & Liaison", "Live Data Collector",
-    "Python Overlord", "Excel Master", "Humanoid Report Generator",
-    "Machine Learning Oracle", "Deep Learning Strategist", "Analytics Expert"
+    "Python Overlord", "SQL Overlord", "Excel Master", "Humanoid Report Generator",
+    "Machine Learning Oracle", "Deep Learning Strategist",
+    "Power BI Commander", "Tableau Viz Architect"
 ]
 
 system_state = {

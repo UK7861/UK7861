@@ -52,7 +52,7 @@ def run_agency_mission(client_requirements):
 
     # 3. Task Distribution & Workforce Expansion
     distribution_task = Task(
-        description="Analyze requirements. Delegate Python tasks to Python Overlord, Excel tasks to Excel Master, and ML/DL tasks to their respective Oracles.",
+        description="Analyze requirements. Delegate Python tasks to Python Overlord, SQL tasks to SQL Overlord, Excel tasks to Excel Master, BI tasks to Power BI/Tableau units, and ML/DL tasks to their respective Oracles.",
         agent=ceo,
         tools=[agent_creator_tool],
         expected_output="Task distribution and workforce expansion report."
