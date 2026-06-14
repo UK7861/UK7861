@@ -66,6 +66,20 @@ class EvolutionTool(BaseTool):
     def _run(self, mission_data: str) -> str:
         return f"Friday Evolution Engine: Analysis complete. System-wide logic upgraded based on new data patterns. Core version incremented. Intelligence level +1."
 
+class DocumentGenerationTool(BaseTool):
+    name: str = "document_generation_tool"
+    description: str = "Generates high-quality PDF, Word, and Excel reports with human-like writing. Input is the analyzed data and report requirements."
+
+    def _run(self, data: str) -> str:
+        return f"Document Generator: Human-like report synthesized. PDF/Word/Excel files generated and ready for delivery."
+
+class LiveDataStreamTool(BaseTool):
+    name: str = "live_data_stream_tool"
+    description: str = "Collects live data streams as the client speaks and syncs them to the Friday Live Server. Input is the live requirement or data snippet."
+
+    def _run(self, stream_data: str) -> str:
+        return f"Live Data Stream: Captured and synced '{stream_data}' to Friday Live Server in real-time."
+
 # Exporting instances for CrewAI
 data_cleaning_tool = DataCleaningTool()
 bi_automation_tool = BIAutomationTool()
@@ -74,3 +88,5 @@ report_synthesizer = ReportSynthesizer()
 agent_creator_tool = AgentCreatorTool()
 system_fixer_tool = SystemFixerTool()
 evolution_tool = EvolutionTool()
+document_generation_tool = DocumentGenerationTool()
+live_data_stream_tool = LiveDataStreamTool()

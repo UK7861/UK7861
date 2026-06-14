@@ -1,114 +1,71 @@
 from crewai import Agent
-from app.tools.data_tools import data_cleaning_tool, bi_automation_tool, system_fixer_tool
+from app.tools.data_tools import data_cleaning_tool, bi_automation_tool, system_fixer_tool, document_generation_tool
 
 def get_data_agents(llm=None):
-    # Specialized 10 Core Data Agents (One-Man Armies)
-    data_engineer = Agent(
-        role='Data Engineer',
-        goal='Build world-class data pipelines for any scale.',
-        backstory='Master of data movement and transformation. Proficient in Big and Small data.',
+    # Specialized "One-Man Army" Agents
+    python_overlord = Agent(
+        role='Python Overlord',
+        goal='Handle all Python-related work from A to Z, including automation, backend logic, and scripting.',
+        backstory='Master of the Python ecosystem. Capable of building anything from simple scripts to complex AI-driven backends autonomously.',
         tools=[data_cleaning_tool],
         llm=llm,
-        allow_delegation=False,
         verbose=True
     )
 
-    data_scientist = Agent(
-        role='Data Scientist',
-        goal='Extract predictive insights from global datasets.',
-        backstory='Deep learning and statistical powerhouse.',
+    excel_master = Agent(
+        role='Excel Master',
+        goal='Handle the entire work of Excel, from complex formulas to advanced VBA and data modeling.',
+        backstory='The world-class specialist in spreadsheet manipulation and data structuring.',
         llm=llm,
-        allow_delegation=False,
         verbose=True
     )
 
+    humanoid_report_generator = Agent(
+        role='Humanoid Report Generator',
+        goal='Create Word, PDF, and Excel reports that look like they were written by a highly skilled human.',
+        backstory='Specialized in natural language generation and professional document design. Every report is a masterpiece of clarity and human touch.',
+        tools=[document_generation_tool],
+        llm=llm,
+        verbose=True
+    )
+
+    ml_oracle = Agent(
+        role='Machine Learning Oracle',
+        goal='Predict past, present, and future trends. Identify company problems and sales opportunities with precision.',
+        backstory='The predictive powerhouse. Tells the client exactly what happened, what is happening, and what will happen to their products and market.',
+        llm=llm,
+        verbose=True
+    )
+
+    dl_strategist = Agent(
+        role='Deep Learning Strategist',
+        goal='Execute complex deep learning models to solve the most difficult business challenges.',
+        backstory='Specialist in neural networks and deep pattern recognition. Works alongside the ML Oracle to provide a 360-degree vision of the business.',
+        llm=llm,
+        verbose=True
+    )
+
+    # Secondary specialized agents (still acting as one-man armies)
     analytics_expert = Agent(
         role='Analytics Expert',
-        goal='Visualize complexity into clarity.',
-        backstory='Master of data storytelling and BI automation.',
+        goal='Transform raw data into actionable business intelligence.',
+        backstory='Expert in Tableau, Power BI, and interactive analytics.',
         tools=[bi_automation_tool],
         llm=llm,
-        allow_delegation=False,
         verbose=True
     )
 
-    big_data_architect = Agent(
-        role='Big Data Architect',
-        goal='Architect planet-scale data systems.',
-        backstory='Expert in Hadoop, Spark, and massive cloud infrastructure.',
-        llm=llm,
-        allow_delegation=False,
-        verbose=True
-    )
-
-    small_data_specialist = Agent(
-        role='Small Data Specialist',
-        goal='Precision analysis for targeted datasets.',
-        backstory='Expert in extraction and processing of focused data assets.',
-        llm=llm,
-        allow_delegation=False,
-        verbose=True
-    )
-
-    tajziya_analyst = Agent(
-        role='Deep Tajziya Analyst',
-        goal='Perform deep, culturally nuanced analysis.',
-        backstory='Specialized in regional data patterns and deep insights.',
-        llm=llm,
-        allow_delegation=False,
-        verbose=True
-    )
-
-    ml_ops_engineer = Agent(
-        role='MLOps Engineer',
-        goal='Ensure models are production-ready and self-healing.',
-        backstory='Bridges the gap between research and planet-scale deployment.',
-        llm=llm,
-        allow_delegation=False,
-        verbose=True
-    )
-
-    data_privacy_officer = Agent(
-        role='Data Privacy Officer',
-        goal='Guardian of data security and ethics.',
-        backstory='Ensures global compliance and ironclad security.',
-        llm=llm,
-        allow_delegation=False,
-        verbose=True
-    )
-
-    database_administrator = Agent(
-        role='Database Administrator',
-        goal='Optimize the foundation of the agency.',
-        backstory='Ensures zero-latency and high-availability systems.',
-        llm=llm,
-        allow_delegation=False,
-        verbose=True
-    )
-
-    bi_developer = Agent(
-        role='BI Developer',
-        goal='Develop immersive BI experiences.',
-        backstory='Specialist in interactive dashboards and D3.js.',
-        tools=[bi_automation_tool],
-        llm=llm,
-        allow_delegation=False,
-        verbose=True
-    )
-
-    # The Gatekeeper: Quality Assurance (QA) Agent (The Ultimate Auditor)
+    # The Gatekeeper
     qa_agent = Agent(
         role='QA Agent',
         goal='Audit, validate, and fix system-wide issues.',
-        backstory='Ultra-powerful auditor with the ability to self-heal and repair agents.',
+        backstory='The ultimate auditor. Ensures every output is perfect and the system remains stable.',
         tools=[system_fixer_tool],
         llm=llm,
-        allow_delegation=True,
         verbose=True
     )
 
     return [
-        data_engineer, data_scientist, analytics_expert, big_data_architect,
-        small_data_specialist, tajziya_analyst, ml_ops_engineer,
-        data_privacy_officer, database_administrator, bi_developer
+        python_overlord, excel_master, humanoid_report_generator,
+        ml_oracle, dl_strategist, analytics_expert
     ], qa_agent

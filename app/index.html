@@ -257,20 +257,24 @@
         const nodes = [
             { id: "CEO", group: 1 },
             { id: "QA", group: 2 },
-            { id: "DE", group: 3 },
-            { id: "DS", group: 3 },
-            { id: "AE", group: 3 },
-            { id: "BDA", group: 3 },
-            { id: "SDS", group: 3 }
+            { id: "Python", group: 3 },
+            { id: "Excel", group: 3 },
+            { id: "ML", group: 3 },
+            { id: "DL", group: 3 },
+            { id: "Report", group: 3 },
+            { id: "Scout", group: 4 },
+            { id: "Live", group: 4 }
         ];
 
         const links = [
             { source: "CEO", target: "QA" },
-            { source: "CEO", target: "DE" },
-            { source: "CEO", target: "DS" },
-            { source: "CEO", target: "AE" },
-            { source: "QA", target: "DE" },
-            { source: "QA", target: "DS" }
+            { source: "CEO", target: "Python" },
+            { source: "CEO", target: "Excel" },
+            { source: "CEO", target: "ML" },
+            { source: "CEO", target: "DL" },
+            { source: "CEO", target: "Report" },
+            { source: "CEO", target: "Scout" },
+            { source: "Scout", target: "Live" }
         ];
 
         const simulation = d3.forceSimulation(nodes)

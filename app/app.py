@@ -8,7 +8,7 @@ st.set_page_config(page_title="Friday Management Control Room", layout="wide", p
 API_URL = "http://localhost:8000"
 
 st.title("🚀 Friday — Management Control Room")
-st.markdown("### Powered by JARVIS-Core v2.0")
+st.markdown("### Powered by JARVIS-Core v4.0 (Humanoid Intelligence)")
 
 col1, col2 = st.columns([1, 2])
 

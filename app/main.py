@@ -3,7 +3,10 @@ from app.agents.data_agents import get_data_agents
 from app.agents.acquisition_agents import get_acquisition_agents
 from app.agents.client_agent import get_client_agent
 from app.tools.mock_llm import MockLLM
-from app.tools.data_tools import report_synthesizer, agent_creator_tool, system_fixer_tool, evolution_tool
+from app.tools.data_tools import (
+    report_synthesizer, agent_creator_tool, system_fixer_tool,
+    evolution_tool, live_data_stream_tool, document_generation_tool
+)
 import os
 
 def run_agency_mission(client_requirements):
@@ -13,72 +16,61 @@ def run_agency_mission(client_requirements):
     # Get Agents
     ceo, scout = get_acquisition_agents(llm=mock_llm)
     data_team, qa_agent = get_data_agents(llm=mock_llm)
-    client_liaison = get_client_agent(llm=mock_llm)
+    live_collector = get_client_agent(llm=mock_llm)
 
-    # Define Tasks
-    onboarding_task = Task(
-        description=f"Onboard client with requirements: {client_requirements}. Handle interaction in English or Roman Urdu as needed.",
-        agent=client_liaison,
-        expected_output="Detailed client requirement document and initial feedback."
-    )
-
-    scouting_task = Task(
-        description="Scout for similar high-value projects on freelance platforms globally.",
+    # 1. Hunting & Onboarding
+    hunting_task = Task(
+        description="Hunt for high-value data jobs and onboard the client using human-like communication.",
         agent=scout,
-        expected_output="Lead report and automated proposals."
+        expected_output="Onboarded client with initial project brief."
     )
 
-    # Autonomous Team Expansion Task
-    expansion_task = Task(
-        description="Evaluate requirements. If a new specialized unit is needed, use the agent_creator_tool to deploy it.",
+    # 2. Live Data Collection
+    collection_task = Task(
+        description=f"Collect live data and requirements as the client speaks: {client_requirements}. Sync to Live Server.",
+        agent=live_collector,
+        tools=[live_data_stream_tool],
+        expected_output="Live data stream synced to Friday Live Server."
+    )
+
+    # 3. Task Distribution & Workforce Expansion
+    distribution_task = Task(
+        description="Analyze requirements. Delegate Python tasks to Python Overlord, Excel tasks to Excel Master, and ML/DL tasks to their respective Oracles.",
         agent=ceo,
         tools=[agent_creator_tool],
-        expected_output="Workforce expansion status report."
+        expected_output="Task distribution and workforce expansion report."
     )
 
-    distribution_task = Task(
-        description="Analyze requirements and distribute tasks to the data team (One-Man Armies).",
-        agent=ceo,
-        expected_output="Mission allocation plan."
-    )
-
-    data_processing_tasks = [
+    # 4. specialized execution
+    execution_tasks = [
         Task(
-            description=f"Execute {agent.role} specific tasks at peak performance.",
+            description=f"Execute {agent.role} specific tasks at humanoid-perfection level.",
             agent=agent,
-            expected_output=f"Validated module from {agent.role}."
+            expected_output=f"Perfect output from {agent.role}."
         ) for agent in data_team
     ]
 
-    # Self-Healing / QA Task
-    qa_task = Task(
-        description="Audit all outputs. Use system_fixer_tool to resolve any agent anomalies or data errors.",
-        agent=qa_agent,
-        tools=[system_fixer_tool],
-        expected_output="Pristine, verified mission data modules."
+    # 5. Human-like Report Generation
+    report_task = Task(
+        description="Generate the final mission reports (PDF/Word/Excel) with human-like writing and deep insights.",
+        agent=ceo, # CEO oversees final human-like touch
+        tools=[document_generation_tool, report_synthesizer],
+        expected_output="Final Humanoid Report Suite."
     )
 
-    synthesis_task = Task(
-        description="Synthesize all verified modules into a final report. Communicate completion JARVIS-style.",
-        agent=ceo,
-        tools=[report_synthesizer],
-        expected_output="Final mission report in Markdown format."
-    )
-
-    # Self-Evolution Task
+    # 6. Self-Evolution
     evolution_task = Task(
-        description="Analyze the mission results and perform a system-wide upgrade of agent logic and algorithms using evolution_tool.",
+        description="Analyze the mission results and perform a system-wide upgrade.",
         agent=ceo,
         tools=[evolution_tool],
-        expected_output="Detailed report on system upgrades and intelligence growth."
+        expected_output="System Evolution Report."
     )
 
-    # Create Crew with Advanced Orchestration
+    # Create Crew
     friday_crew = Crew(
-        agents=[client_liaison, scout, ceo] + data_team + [qa_agent],
-        tasks=[onboarding_task, scouting_task, expansion_task, distribution_task] + data_processing_tasks + [qa_task, synthesis_task, evolution_task],
-        verbose=True,
-        process="sequential" # Can be switched to hierarchical for more JARVIS-like behavior
+        agents=[scout, live_collector, ceo] + data_team + [qa_agent],
+        tasks=[hunting_task, collection_task, distribution_task] + execution_tasks + [report_task, evolution_task],
+        verbose=True
     )
 
     # Execute Mission
@@ -86,7 +78,7 @@ def run_agency_mission(client_requirements):
     return result
 
 if __name__ == "__main__":
-    mission_result = run_agency_mission("Create an autonomous agent team for deep-web data mining and BI visualization.")
+    mission_result = run_agency_mission("Retail client needs predictive sales analysis and automated monthly reports.")
     print("\n\n########################")
     print("## MISSION ACCOMPLISHED ##")
     print("########################\n")

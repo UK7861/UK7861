@@ -10,14 +10,14 @@ def test_agent_counts():
     ceo, scout = get_acquisition_agents()
     client_liaison = get_client_agent()
 
-    assert len(data_team) == 10
+    # Updated for v4.0 Roster
+    assert len(data_team) == 6
     assert qa.role == 'QA Agent'
     assert ceo.role == 'Friday CEO'
-    assert scout.role == 'Platform Scout'
-    assert client_liaison.role == 'AI Voice Data Agent'
+    assert scout.role == 'JARVIS Scout & Liaison'
+    assert client_liaison.role == 'Live Data Collector'
 
 def test_data_cleaning_tool():
-    # StructuredTool in CrewAI/LangChain
     raw_data = json.dumps([
         {"id": 1, "name": "Alice"},
         {"id": 1, "name": "Alice"},
@@ -26,7 +26,6 @@ def test_data_cleaning_tool():
     cleaned_json = data_cleaning_tool.run(raw_data)
     cleaned_data = json.loads(cleaned_json)
 
-    # Should remove duplicate and null
     assert len(cleaned_data) == 1
     assert cleaned_data[0]["name"] == "Alice"
 
