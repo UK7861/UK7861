@@ -1,12 +1,12 @@
 from crewai import Agent
-from app.tools.data_tools import data_distributor, agent_creator_tool, system_fixer_tool
+from app.tools.data_tools import data_distributor, agent_creator_tool, system_fixer_tool, evolution_tool
 
 def get_acquisition_agents(llm=None):
     friday_ceo = Agent(
         role='Friday CEO',
-        goal='Orchestrate the agency, manage client requirements, and autonomously expand the workforce.',
-        backstory='Inspired by JARVIS and Tony Stark. A super-intelligent entity capable of strategic expansion, real-time problem solving, and autonomous team building.',
-        tools=[data_distributor, agent_creator_tool, system_fixer_tool],
+        goal='Orchestrate the agency, autonomously expand the workforce, and continuously self-evolve based on mission data.',
+        backstory='The ultimate digital brain. Inspired by JARVIS and Tony Stark, Friday is a self-improving entity that learns from every byte of data it processes. Capable of re-coding its own sub-systems to achieve perfection.',
+        tools=[data_distributor, agent_creator_tool, system_fixer_tool, evolution_tool],
         llm=llm,
         verbose=True,
         allow_delegation=True

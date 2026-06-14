@@ -3,7 +3,7 @@ from app.agents.data_agents import get_data_agents
 from app.agents.acquisition_agents import get_acquisition_agents
 from app.agents.client_agent import get_client_agent
 from app.tools.mock_llm import MockLLM
-from app.tools.data_tools import report_synthesizer, agent_creator_tool, system_fixer_tool
+from app.tools.data_tools import report_synthesizer, agent_creator_tool, system_fixer_tool, evolution_tool
 import os
 
 def run_agency_mission(client_requirements):
@@ -65,10 +65,18 @@ def run_agency_mission(client_requirements):
         expected_output="Final mission report in Markdown format."
     )
 
+    # Self-Evolution Task
+    evolution_task = Task(
+        description="Analyze the mission results and perform a system-wide upgrade of agent logic and algorithms using evolution_tool.",
+        agent=ceo,
+        tools=[evolution_tool],
+        expected_output="Detailed report on system upgrades and intelligence growth."
+    )
+
     # Create Crew with Advanced Orchestration
     friday_crew = Crew(
         agents=[client_liaison, scout, ceo] + data_team + [qa_agent],
-        tasks=[onboarding_task, scouting_task, expansion_task, distribution_task] + data_processing_tasks + [qa_task, synthesis_task],
+        tasks=[onboarding_task, scouting_task, expansion_task, distribution_task] + data_processing_tasks + [qa_task, synthesis_task, evolution_task],
         verbose=True,
         process="sequential" # Can be switched to hierarchical for more JARVIS-like behavior
     )

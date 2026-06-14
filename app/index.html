@@ -169,7 +169,7 @@
 </head>
 <body>
     <header>
-        <div class="logo">FRIDAY DATA CORE</div>
+        <div class="logo">FRIDAY DATA CORE <small id="core-version" style="font-size: 0.6rem; vertical-align: middle; opacity: 0.7;">v3.0.0-EVO</small></div>
         <div class="system-status">
             <div id="pkt-time">PKT: --:--:--</div>
             <div class="status-badge" id="sys-status">SYSTEM ONLINE</div>
@@ -233,8 +233,8 @@
                     <div class="stat-value" id="stat-agents">13</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">UPTIME</div>
-                    <div class="stat-value">99.9%</div>
+                    <div class="stat-label">INTEL LEVEL</div>
+                    <div class="stat-value" id="stat-intel">100</div>
                 </div>
             </div>
         </div>
@@ -336,6 +336,8 @@
 
                 // Update Stats
                 document.getElementById('stat-missions').innerText = state.mission_count;
+                document.getElementById('stat-intel').innerText = state.intelligence_level;
+                document.getElementById('core-version').innerText = state.core_version;
 
                 // Update CEO Vocal Output (last log)
                 if (state.logs.length > 0) {

@@ -46,6 +46,10 @@ def autopilot_loop():
 
             requests.post(f"{API_URL}/log", json={"message": "MISSION COMPLETE: Final report ready for Boss.", "level": "SUCCESS"})
 
+            # Evolution Step
+            requests.post(f"{API_URL}/log", json={"message": "Evolution Engine: Upgrading system intelligence...", "level": "INFO"})
+            requests.post(f"{API_URL}/upgrade_core")
+
             # Update overall mission count
             state = requests.get(f"{API_URL}/state").json()
             requests.post(f"{API_URL}/update_agent", params={

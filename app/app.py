@@ -18,10 +18,11 @@ with col1:
         response = requests.get(f"{API_URL}/state")
         state = response.json()
 
-        m1, m2, m3 = st.columns(3)
+        m1, m2, m3, m4 = st.columns(4)
         m1.metric("Health", state["status"])
         m2.metric("Missions", state["mission_count"])
-        m3.metric("One-Man Armies", state["agents_online"])
+        m3.metric("Intel Level", state["intelligence_level"])
+        m4.metric("Core", state["core_version"])
     except:
         st.error("Connection to Friday Core lost.")
 

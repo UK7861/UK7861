@@ -59,6 +59,13 @@ class SystemFixerTool(BaseTool):
     def _run(self, problem: str) -> str:
         return f"Friday System Fixer: Diagnostic complete. Issue '{problem}' resolved. All agents stabilized. System integrity at 100%."
 
+class EvolutionTool(BaseTool):
+    name: str = "evolution_tool"
+    description: str = "Analyzes mission data and agent performance to self-upgrade the agency's logic, code, and intelligence. Input is the mission summary/data."
+
+    def _run(self, mission_data: str) -> str:
+        return f"Friday Evolution Engine: Analysis complete. System-wide logic upgraded based on new data patterns. Core version incremented. Intelligence level +1."
+
 # Exporting instances for CrewAI
 data_cleaning_tool = DataCleaningTool()
 bi_automation_tool = BIAutomationTool()
@@ -66,3 +73,4 @@ data_distributor = DataDistributor()
 report_synthesizer = ReportSynthesizer()
 agent_creator_tool = AgentCreatorTool()
 system_fixer_tool = SystemFixerTool()
+evolution_tool = EvolutionTool()

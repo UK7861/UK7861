@@ -16,6 +16,8 @@ agents = [
 system_state = {
     "status": "OPERATIONAL",
     "mission_count": 42,
+    "intelligence_level": 100,
+    "core_version": "3.0.0-EVO",
     "agents_online": len(agents),
     "last_update": time.time(),
     "logs": [
@@ -60,6 +62,14 @@ def update_agent(name: str, status: str, progress: int):
 def increment_missions():
     system_state["mission_count"] += 1
     return {"status": "Mission count incremented"}
+
+@app.post("/upgrade_core")
+def upgrade_core():
+    system_state["intelligence_level"] += 5
+    major, minor, patch = system_state["core_version"].split("-")[0].split(".")
+    patch = str(int(patch) + 1)
+    system_state["core_version"] = f"{major}.{minor}.{patch}-EVO"
+    return {"status": "Core upgraded", "new_level": system_state["intelligence_level"]}
 
 if __name__ == "__main__":
     import uvicorn
