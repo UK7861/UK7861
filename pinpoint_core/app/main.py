@@ -25,9 +25,17 @@ from sqlalchemy.orm import sessionmaker, Session
 load_dotenv()
 
 # ==================== LOGGING SETUP ====================
+LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+LOG_FILE = os.path.join(LOG_DIR, "system.log")
+
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()
+    ]
 )
 logger = logging.getLogger("PinPointCore")
 
@@ -327,6 +335,7 @@ async def add_branch(
         duplicate = db.query(Branch).filter(
             Branch.tenant_id == tenant_id, Branch.is_deleted == 0,
             (Branch.branch_name == branch_data.branch_name) |
+            (Branch.business_address == branch_data.business_address) |
             ((Branch.latitude == branch_data.latitude) & (Branch.longitude == branch_data.longitude))
         ).first()
         if duplicate:
@@ -453,11 +462,24 @@ async def update_voice_settings(
 
 
 @app.get("/api/v1/agents/health")
-def get_agents_health():
+def get_agents_health(theme: str = "light"):
     return {
-        "interceptor": agent_matrix["interceptor"].catch_mmi_signal(),
-        "diagnoser": agent_matrix["diagnoser"].monitor_stack(),
-        "escalator": agent_matrix["escalator"].prepare_postgres_migration()
+        "timestamp": datetime.utcnow().isoformat(),
+        "agents": {
+            "interceptor": {
+                "status": "ACTIVE",
+                "last_signal": agent_matrix["interceptor"].catch_mmi_signal()
+            },
+            "diagnoser": {
+                "status": agent_matrix["diagnoser"].monitor_stack()
+            },
+            "optimizer": {
+                "status": agent_matrix["optimizer"].enforce_layout_rules(theme)
+            },
+            "escalator": {
+                "status": agent_matrix["escalator"].prepare_postgres_migration()
+            }
+        }
     }
 
 @app.get("/config")
