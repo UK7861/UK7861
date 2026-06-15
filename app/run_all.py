@@ -20,15 +20,12 @@ def launch_friday():
         scout_process = subprocess.Popen([sys.executable, "app/scout_service.py"])
         processes.append(scout_process)
 
-        # 3. Start Streamlit Dashboard
-        print("Starting Streamlit Dashboard...")
-        streamlit_process = subprocess.Popen(["streamlit", "run", "app/app.py", "--server.port", "8501"])
-        processes.append(streamlit_process)
-
-        # 4. Start HUD (Simple HTTP Server for index.html)
-        print("Starting HUD Command Deck on port 8080...")
-        hud_process = subprocess.Popen([sys.executable, "-m", "http.server", "8080"], cwd="app")
-        processes.append(hud_process)
+        # 3. Start Next.js Frontend
+        print("Starting Next.js Production HUD...")
+        # (Assuming 'npm install' and 'npm run build' are done in Docker)
+        # In a local sandbox, we can simulate with dev mode if node is present
+        frontend_process = subprocess.Popen(["npm", "run", "dev"], cwd="frontend")
+        processes.append(frontend_process)
 
         # 5. Start Autopilot
         print("Starting Autopilot Engine...")

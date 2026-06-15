@@ -25,6 +25,9 @@ async def run_production_mission(user_intent: str):
     logger.info("Orchestrating multi-agent workflow via LangGraph")
     final_state = await app.ainvoke(initial_state)
 
+    # Store results in the global system state (simulation)
+    # In a real production system, this would update the DB and send a WS notification
+
     # Persistence
     # (Assuming we have a way to get session here or use a context manager)
     # This is a simplified production flow

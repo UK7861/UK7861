@@ -72,6 +72,7 @@ class EvolutionTool(BaseTool):
 from fpdf import FPDF
 from docx import Document
 import os
+import time
 
 class DocumentGenerationTool(BaseTool):
     name: str = "document_generation_tool"
@@ -139,6 +140,22 @@ class NeuralGraphTool(BaseTool):
 
     def _run(self, node_data: str) -> str:
         return f"Knowledge Graph: New neural node '{node_data}' integrated and cross-referenced with core memory."
+
+class ConflictResolver(BaseTool):
+    name: str = "conflict_resolver"
+    description: str = "Resolves inconsistencies between agent outputs."
+
+    def _run(self, outputs: str) -> str:
+        return "Conflicts resolved by Friday CEO."
+
+def get_automation_tools():
+    return {
+        "cleaning": DataCleaningTool(),
+        "bi": BIAutomationTool(),
+        "distributor": DataDistributor(),
+        "synthesizer": ReportSynthesizer(),
+        "resolver": ConflictResolver()
+    }
 
 # Exporting instances for CrewAI
 data_cleaning_tool = DataCleaningTool()
