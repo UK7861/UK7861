@@ -1,22 +1,25 @@
 import pytest
-from app.agents.data_agents import get_data_agents
-from app.agents.acquisition_agents import get_acquisition_agents
-from app.agents.client_agent import get_client_agent
+from app.agents.all_agents import get_all_agents
 from app.tools.data_tools import data_cleaning_tool
 import json
 
 def test_agent_counts():
-    data_team, qa = get_data_agents()
-    ceo, scout = get_acquisition_agents()
-    client_liaison = get_client_agent()
+    agents = get_all_agents()
 
-    # Updated for v6.0 Roster (BI specialized agents added + Big/Small Data)
-    assert len(data_team) == 10
-    assert any(a.role == 'Executive Document Architect' for a in data_team)
-    assert qa.role == 'QA Agent'
-    assert "Friday CEO" in ceo.role
-    assert scout.role == 'JARVIS Scout & Liaison'
-    assert client_liaison.role == 'Live Data Collector'
+    # 16 Total Agents in OS-1.0-ALIVE
+    assert len(agents["all_list"]) == 16
+
+    specialists = agents["specialists"]
+    assert any(a.role == 'Executive Document Architect' for a in specialists)
+    assert any(a.role == 'Deep Tajziya Analyst' for a in specialists)
+    assert any(a.role == 'Analytics Expert' for a in specialists)
+
+    leadership = agents["leadership"]
+    assert any("Friday CEO" in a.role for a in leadership)
+    assert any(a.role == 'JARVIS Scout & Liaison' for a in leadership)
+
+    assert agents["gatekeeper"].role == 'QA Agent (Auditor)'
+    assert agents["liaison"][0].role == 'Live Data Collector'
 
 def test_data_cleaning_tool():
     raw_data = json.dumps([

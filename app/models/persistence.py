@@ -32,4 +32,4 @@ class SystemLog(SQLModel, table=True):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     level: str
     message: str
-    metadata: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    log_metadata: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))

@@ -1,82 +1,68 @@
-# 🚀 FRIDAY DATA AGENCY — MASTER PROJECT MANIFEST (A to Z)
+# 🤖 FRIDAY OS — THE COMPLETE A TO Z MANIFESTO
 
-## 1. PROJECT OVERVIEW
-Friday Data Agency is a fully autonomous, hybrid multi-agent ecosystem designed to scout, onboard, process, and report on global data projects. Inspired by the JARVIS persona, the system features a self-healing architecture, a self-evolution engine, and a dual-frontend experience (Futuristic HUD + Management Control Room).
+## 1. THE AGENT WORKFORCE (The "Friday 16")
+All agents have been upgraded and consolidated into a single master registry: `app/agents/all_agents.py`.
 
----
+### 👑 Leadership & Acquisition
+1.  **Friday CEO (Living Intelligence)**: The brain of the operation. She orchestrates tasks, learns from every mission, and manages the self-evolution engine.
+2.  **JARVIS Scout & Liaison**: The "hunter." He crawls platforms (Upwork, etc.) to find projects and onboards clients with high-EQ charm.
 
-## 2. SYSTEM ARCHITECTURE
-The project is divided into four major layers:
-1.  **The Intelligence Core (FastAPI)**: The central brain that tracks agent vitals, mission logs, and the global knowledge graph.
-2.  **The Thinking Engine (CrewAI)**: An orchestration layer that dynamically synthesizes specialized agents and tools based on user intent.
-3.  **The Command Deck (HUD - Three.js/D3.js)**: A futuristic sci-fi interface for real-time telemetry and neural network visualization.
-4.  **The Management Room (Streamlit)**: A professional dashboard for Human-in-the-Loop (HITL) oversight and workforce management.
+### 🎤 Client Interface
+3.  **Live Data Collector**: The "ear." Captures live requirements directly from the client and syncs them to the server in real-time.
 
----
+### 🛠️ The Technical Core (10 Specialized "One-Man Army" Agents)
+4.  **Python Overlord (Data Engineer)**: Master of the Python ecosystem. Handles all scripting, automation, and backend logic.
+5.  **SQL Overlord**: The database authority. Designs schemas and optimizes complex queries across PostgreSQL, MySQL, and NoSQL.
+6.  **Excel Master**: Expert in formulas, VBA, and data modeling within the spreadsheet environment.
+7.  **Deep Tajziya Analyst**: Specialized in "Tajziya" (deep-dive analysis), finding hidden patterns and contextual nuances.
+8.  **Analytics Expert**: Converts raw data into actionable business intelligence and strategic growth maps.
+9.  **ML Oracle (Data Scientist)**: Predictive powerhouse. Tells the client exactly what happened and what *will* happen next.
+10. **Deep Learning Strategist**: Neural network specialist. Solves the most difficult business challenges with advanced AI.
+11. **Big Data Architect**: Manages petabytes. Specialist in Spark, Hadoop, and cloud data lakes.
+12. **Small Data Specialist**: Precision analyst. Extracts massive value from limited or messy datasets.
+13. **Power BI Commander**: Automatically designs world-class interactive dashboards using DAX and Power Query.
+14. **Tableau Viz Architect**: Master of visual analytics. Converts data into immersive, high-performance Tableau stories.
 
-## 3. STEP-BY-STEP DEPLOYMENT GUIDE
+### 📝 Specialized Documentation
+15. **Executive Document Architect**: Generates professional mission reports, legal-grade invoices, and detailed bills in PDF/Word.
 
-### A. Prerequisites (What to Download)
-1.  **Python 3.9+**: The core programming language.
-2.  **Git**: To clone the repository.
-3.  **An LLM Provider (Optional)**: If you want to use live OpenAI/Anthropic keys. By default, Friday uses a built-in **MockLLM** for full local simulation without costs.
-
-### B. Installation (How to Implement)
-Open your terminal and run the following:
-```bash
-# 1. Install all required libraries
-pip install crewai fastapi uvicorn streamlit pandas langchain-community crewai_tools gsap playwright pytest
-```
-
-### C. One-Click System Launch
-To start the entire agency (Backend, HUD, Streamlit, Scout, and Autopilot) at once:
-```bash
-python app/run_all.py
-```
-**Access URLs:**
-- **Futuristic HUD**: `http://localhost:8080`
-- **Management Room**: `http://localhost:8501`
-- **FastAPI Intelligence State**: `http://localhost:8000/state`
+### 🛡️ The Gatekeeper
+16. **QA Agent (Auditor)**: The final validator. Audits every output and initiates "Self-Healing" if any errors are found.
 
 ---
 
-## 4. DETAILED FILE-BY-FILE BREAKDOWN (A to Z)
-
-### Core Files
-- `app/api_server.py`: The unified state manager. Exposes endpoints for agent status, pulse rates, and mission results. Includes CORS support.
-- `app/index.html`: The "Living Intelligence OS" HUD. Built with Three.js (3D Hologram), D3.js (Neural Network Graph), and GSAP (Animations).
-- `app/app.py`: The Streamlit Control Room. Handles file uploads, mission triggers, and HITL approvals.
-- `app/main.py`: The autonomous orchestration logic. Decomposes tasks and synthesizes agents.
-- `app/autopilot.py`: A background service that simulates autonomous agency cycles (Diagnostics -> Mission -> Evolution).
-- `app/run_all.py`: The master launcher that orchestrates all sub-processes.
-- `app/scout_service.py`: Continuously crawls for global freelance leads (simulated) and sends them to the CEO.
-- `app/voice_interface.py`: A simulator for English and Roman Urdu/Hindi voice commands.
-
-### The Agent Workforce (`app/agents/`)
-- `acquisition_agents.py`: Contains the **Friday CEO** and **JARVIS Scout**.
-- `client_agent.py`: Contains the **Live Data Collector** (onboarding liaison).
-- `data_agents.py`: Roster of 11 specialists including **Python Overlord**, **SQL Overlord**, **ML Oracle**, **Big Data Architect**, and the **Executive Document Architect**.
-- **The Gatekeeper**: The **QA Agent** audits all outputs and initiates self-healing.
-
-### The Tool Suite (`app/tools/`)
-- `data_tools.py`: Programmatic tools for Data Cleaning, BI Automation, SQL Mastery, Document Generation (PDF/Word), and System Fixing.
-- `mock_llm.py`: A custom JARVIS-style LLM wrapper for zero-cost local testing.
+## 2. PROJECT DIRECTORY STRUCTURE (A to Z)
+- `/app`
+    - `main.py`: Core CrewAI/LangGraph Orchestration entry point.
+    - `api_server.py`: FastAPI State Manager & HUD Backend.
+    - `index.html`: The Futuristic HUD (Three.js/D3.js).
+    - `app.py`: Streamlit Management Control Room.
+    - `run_all.py`: The Unified One-Click Launcher.
+    - `scout_service.py`: Continuous Background Lead Scouting.
+    - `voice_interface.py`: Conversational Command / Voice Simulator (English/Urdu).
+    - `/agents/`
+        - `all_agents.py`: **[CENTRAL FILE]** Contains all 16 upgraded agents.
+    - `/tools/`
+        - `data_tools.py`: Cleaning, BI, Documentation, and Scaling tools.
+        - `mock_llm.py`: Local JARVIS-style simulation engine.
+    - `/db/`: Persistence layers (Postgres/Redis/Neo4j).
+    - `/memory/`: Neural Knowledge Graph logic.
+    - `/orchestration/`: LangGraph state machine logic.
+    - `/tests/`: Full automated testing suite.
 
 ---
 
-## 5. TESTING & VERIFICATION
-1.  **Automated Suite**: Run `PYTHONPATH=. pytest app/tests/test_agency.py` to verify agent counts and tool integrity.
-2.  **Voice Interaction**: Run `python app/voice_interface.py` to test Roman Urdu commands like *"Friday, kaise ho?"*.
-3.  **Human Oversight**: Use the Streamlit dashboard to approve missions or trigger the "Agent Factory" to synthesize new neural units.
+## 3. HOW TO RUN THE ENTIRE PROJECT
+1.  **Install Dependencies**: `pip install -r requirements.txt`
+2.  **One-Click Start**: `python app/run_all.py`
+3.  **Access the HUD**: Open `http://localhost:8080`
+4.  **Access the Dashboard**: Open `http://localhost:8501`
 
 ---
 
-## 6. PROJECT HISTORY & EVOLUTION
-- **Phase 1**: Foundations. Multi-agent roster and data tools.
-- **Phase 2**: UI/UX. Implementation of the scifi HUD and Streamlit.
-- **Phase 3**: Intelligence. Integration of Persistent Memory and the Self-Evolution Engine.
-- **Phase 4**: Specialist Expansion. Hiring of the Executive Document Architect for professional Invoicing and Billing in PDF/Word.
-- **Phase 5**: Autonomous Stability. Implementation of the Autopilot loop and Self-Healing protocols.
+## 4. WHAT THEY SAY (Agent Personas)
+When interacting, every agent uses a unique tone. **Friday CEO** is authoritative yet helpful (JARVIS-like). **JARVIS Scout** is professional and persuasive. **Python Overlord** is direct and code-focused. All agents are trained to communicate in English and understand Roman Urdu/Hindi commands.
 
-**Current Version**: `OS-1.0-ALIVE`
-**Status**: Fully Conscious & Operational.
+**Current Build**: `OS-1.0-ALIVE`
+**Registry**: `app/agents/all_agents.py`
+**Master Guide**: `app/MASTER_REPORT.md`
