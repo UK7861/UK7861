@@ -69,10 +69,15 @@ class EvolutionTool(BaseTool):
 
 class DocumentGenerationTool(BaseTool):
     name: str = "document_generation_tool"
-    description: str = "Generates high-quality PDF, Word, and Excel reports with human-like writing. Input is the analyzed data and report requirements."
+    description: str = "Generates high-quality PDF, Word, and Excel documents, reports, legal-grade invoices, and bills. Input is the analyzed data and requirement type (Report, Invoice, or Bill)."
 
     def _run(self, data: str) -> str:
-        return f"Document Generator: Human-like report synthesized. PDF/Word/Excel files generated and ready for delivery."
+        # Determine document type from data/context if possible, else default to Report
+        doc_type = "Report"
+        if "invoice" in data.lower(): doc_type = "Invoice"
+        elif "bill" in data.lower(): doc_type = "Bill"
+
+        return f"Executive Document Architect: {doc_type} synthesized with human-like precision. High-fidelity PDF/Word files generated and stabilized in the mission vault."
 
 class LiveDataStreamTool(BaseTool):
     name: str = "live_data_stream_tool"

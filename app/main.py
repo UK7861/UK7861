@@ -25,7 +25,7 @@ class FridayThinkingEngine:
         available_tool_map = {
             "Data Engineer": [data_cleaning_tool, sql_query_master_tool],
             "BI Architect": [bi_automation_tool],
-            "Report Specialist": [document_generation_tool],
+            "Executive Document Architect": [document_generation_tool],
             "Strategic Analyst": []
         }
 
@@ -33,7 +33,9 @@ class FridayThinkingEngine:
         required_roles = ["Strategic Analyst"]
         if "data" in user_intent.lower() or "sql" in user_intent.lower(): required_roles.append("Data Engineer")
         if "dashboard" in user_intent.lower() or "bi" in user_intent.lower(): required_roles.append("BI Architect")
-        if "report" in user_intent.lower() or "strategy" in user_intent.lower(): required_roles.append("Report Specialist")
+        # Trigger Document Architect for reports, invoices, or bills
+        if any(kw in user_intent.lower() for kw in ["report", "strategy", "invoice", "bill"]):
+            required_roles.append("Executive Document Architect")
 
         dynamic_agents = []
         crew_tasks = []

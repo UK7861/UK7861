@@ -30,6 +30,12 @@ class MockLLM(LLM):
             return "Audit in progress... System anomaly detected and neutralized. All data modules have been verified and stabilized."
         elif "clean" in p:
             return "Executing deep cleaning protocols. Redundant records eliminated and null values handled. Data set is now pristine."
+        elif "invoice" in p or "bill" in p or "report" in p:
+            doc_type = "document"
+            if "invoice" in p: doc_type = "legal-grade invoice"
+            elif "bill" in p: doc_type = "professional bill"
+            elif "report" in p: doc_type = "comprehensive mission report"
+            return f"I am drafting the {doc_type} now, Boss. It will be generated in both high-fidelity PDF and Word formats, ensuring a human-like professional finish. Just a moment."
         else:
             return f"Friday: Processing your request regarding '{prompt[:30]}...'. All systems green."
 

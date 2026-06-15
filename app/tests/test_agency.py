@@ -12,6 +12,7 @@ def test_agent_counts():
 
     # Updated for v6.0 Roster (BI specialized agents added + Big/Small Data)
     assert len(data_team) == 10
+    assert any(a.role == 'Executive Document Architect' for a in data_team)
     assert qa.role == 'QA Agent'
     assert ceo.role == 'Friday CEO'
     assert scout.role == 'JARVIS Scout & Liaison'

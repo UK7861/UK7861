@@ -32,10 +32,10 @@ def get_data_agents(llm=None):
         verbose=True
     )
 
-    humanoid_report_generator = Agent(
-        role='Humanoid Report Generator',
-        goal='Create high-end Word, PDF, Excel, and Presentation (PPT) reports with human-like writing.',
-        backstory='Specialized in natural language generation, professional document design, and persuasive presentations. Reports and slides are indistinguishable from high-end human work.',
+    executive_document_architect = Agent(
+        role='Executive Document Architect',
+        goal='Generate professional reports, legal-grade invoices, detailed bills, and high-end Word/PDF documents with human-like precision.',
+        backstory='The ultimate specialist in document synthesis. Whether it is a complex mission report, a financial invoice, or a structured bill, this agent ensures the output is indistinguishable from professional human work. Expert in PDF, Word, and Excel formatting.',
         tools=[document_generation_tool],
         llm=llm,
         verbose=True
@@ -104,7 +104,7 @@ def get_data_agents(llm=None):
 
     return [
         python_overlord, sql_overlord, excel_master,
-        humanoid_report_generator, ml_oracle, dl_strategist,
+        executive_document_architect, ml_oracle, dl_strategist,
         power_bi_commander, tableau_viz_architect,
         big_data_architect, small_data_specialist
     ], qa_agent
