@@ -1,26 +1,192 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+"""
+PinPoint AI Voice Agent - Unified Production Backend
+Phase 1 + Phase 2 Complete: Auth + CRUD + AI Voice + Local Tools
+"""
+import os
+import logging
+import hashlib
+import secrets
+import hmac
+import base64
+import json
+from datetime import datetime, timedelta
+from typing import Optional, List
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Response, Query, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy.orm import Session
-import io
-import os
-import logging
-from gtts import gTTS
-from typing import List
+from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
 
-from . import models, schemas
-from .models import SessionLocal, engine
-from .agents.matrix import agent_matrix
+# Load environment variables
+load_dotenv()
 
-# Initialize database
-models.Base.metadata.create_all(bind=engine)
-
-# Logging configuration
-logging.basicConfig(level=logging.INFO)
+# ==================== LOGGING SETUP ====================
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger("PinPointCore")
 
-app = FastAPI(title="Pin Point Core API")
+# ==================== DATABASE SETUP ====================
+DATABASE_PATH = os.getenv("DATABASE_PATH", "pinpoint_production.db")
+DATABASE_URL = f"sqlite:///./{DATABASE_PATH}"
+
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+
+# ==================== SQLALCHEMY MODELS ====================
+class Tenant(Base):
+    __tablename__ = "tenants"
+    id = Column(Integer, primary_key=True, index=True)
+    company_name = Column(String(200), nullable=False, index=True)
+    email = Column(String(200), unique=True, nullable=False, index=True)
+    password_hash = Column(String(300), nullable=False)
+    business_number = Column(String(50))
+    business_address = Column(Text)
+    industry_type = Column(String(100))
+    latitude = Column(Float)
+    longitude = Column(Float)
+    preferred_voice_gender = Column(String(20), default="female")
+    custom_voice_prompt = Column(Text)
+    support_email = Column(String(200))
+    created_at = Column(String(50), default=lambda: datetime.utcnow().isoformat())
+    updated_at = Column(String(50))
+    is_active = Column(Integer, default=1)
+
+
+class Branch(Base):
+    __tablename__ = "branches"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, nullable=False, index=True)
+    branch_name = Column(String(200), nullable=False)
+    business_address = Column(Text)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    is_deleted = Column(Integer, default=0)
+    created_at = Column(String(50), default=lambda: datetime.utcnow().isoformat())
+    updated_at = Column(String(50))
+
+
+class VoiceTestLog(Base):
+    __tablename__ = "voice_test_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, index=True)
+    gender = Column(String(20))
+    text_spoken = Column(Text)
+    engine_used = Column(String(50))
+    created_at = Column(String(50), default=lambda: datetime.utcnow().isoformat())
+
+
+# Create tables
+Base.metadata.create_all(bind=engine)
+
+
+# ==================== PASSWORD HASHING ====================
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+    return f"{salt}${pwd_hash.hex()}"
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    try:
+        salt, pwd_hash = hashed_password.split('$')
+        pwd_check = hashlib.pbkdf2_hmac('sha256', plain_password.encode('utf-8'), salt.encode('utf-8'), 100000)
+        return pwd_check.hex() == pwd_hash
+    except Exception:
+        return False
+
+
+# ==================== JWT TOKEN ====================
+SECRET_KEY = os.getenv("SECRET_KEY", "DEV_FALLBACK_KEY_CHANGE_THIS")
+TOKEN_EXPIRY_HOURS = 24
+
+
+def create_jwt_token(tenant_id: int) -> str:
+    header = base64.urlsafe_b64encode(b'{"alg":"HS256","typ":"JWT"}').rstrip(b'=').decode()
+    payload = {
+        "sub": str(tenant_id),
+        "iat": int(datetime.utcnow().timestamp()),
+        "exp": int((datetime.utcnow() + timedelta(hours=TOKEN_EXPIRY_HOURS)).timestamp())
+    }
+    payload_b64 = base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b'=').decode()
+    signature_data = f"{header}.{payload_b64}".encode()
+    signature = hmac.new(SECRET_KEY.encode(), signature_data, hashlib.sha256).digest()
+    signature_b64 = base64.urlsafe_b64encode(signature).rstrip(b'=').decode()
+    return f"{header}.{payload_b64}.{signature_b64}"
+
+
+def verify_jwt_token(token: str) -> int:
+    try:
+        parts = token.split('.')
+        if len(parts) != 3:
+            raise Exception("Invalid token format")
+        header, payload_b64, signature_b64 = parts
+        signature_data = f"{header}.{payload_b64}".encode()
+        expected_sig = hmac.new(SECRET_KEY.encode(), signature_data, hashlib.sha256).digest()
+        actual_sig = base64.urlsafe_b64decode(signature_b64 + '==')
+        if not hmac.compare_digest(expected_sig, actual_sig):
+            raise Exception("Invalid signature")
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64 + '==').decode())
+        if datetime.utcnow().timestamp() > payload.get('exp', 0):
+            raise Exception("Token expired")
+        return int(payload['sub'])
+    except Exception as e:
+        raise Exception(f"Token verification failed: {str(e)}")
+
+
+def get_current_tenant(authorization: Optional[str] = Header(None)) -> int:
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing.")
+    try:
+        token = authorization.replace("Bearer ", "").strip()
+        return verify_jwt_token(token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+
+
+# ==================== PYDANTIC SCHEMAS ====================
+class TenantSignup(BaseModel):
+    company_name: str = Field(..., min_length=2, max_length=200)
+    branch_name: str = Field(..., min_length=1, max_length=200)
+    email: EmailStr
+    password: str = Field(..., min_length=6, max_length=100)
+    business_number: str = Field(..., min_length=8, max_length=20)
+    business_address: str
+    industry_type: str
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+
+
+class TenantLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class BranchCreate(BaseModel):
+    branch_name: str = Field(..., min_length=1, max_length=200)
+    business_address: Optional[str] = None
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+
+
+class VoiceSettingsUpdate(BaseModel):
+    preferred_voice_gender: str = Field(default="female", pattern="^(male|female)$")
+    custom_voice_prompt: Optional[str] = None
+    support_email: Optional[EmailStr] = None
+
+
+# ==================== FASTAPI APP ====================
+app = FastAPI(title="PinPoint AI Voice Agent - Core Engine", version="3.1.0")
+
+# Import Agent Matrix
+from .agents.matrix import agent_matrix
 
 # Mount static files
 static_path = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -30,16 +196,16 @@ app.mount("/static", StaticFiles(directory=static_path), name="static")
 def read_index():
     return FileResponse(os.path.join(static_path, "index.html"))
 
-# Global CORS footprint
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Dependency
+
 def get_db():
     db = SessionLocal()
     try:
@@ -47,121 +213,244 @@ def get_db():
     finally:
         db.close()
 
-# --- AUTH & ONBOARDING ---
 
-@app.post("/auth/signup", response_model=schemas.Token)
-def signup(tenant: schemas.TenantCreate, db: Session = Depends(get_db)):
-    # Check if tenant exists
-    db_tenant = db.query(models.Tenant).filter(models.Tenant.email == tenant.email).first()
-    if db_tenant:
-        raise HTTPException(status_code=400, detail="Email already registered")
+# ==================== TTS ENGINE ====================
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
+ELEVENLABS_VOICE_FEMALE = os.getenv("ELEVENLABS_VOICE_FEMALE", "21m00Tcm4TlvDq8ikWAM")
+ELEVENLABS_VOICE_MALE = os.getenv("ELEVENLABS_VOICE_MALE", "ErXwobaYiN019PkySvjV")
 
-    # Check Multi-Branch Anti-Duplication Rule for initial branch
-    duplicate = db.query(models.Branch).filter(
-        (models.Branch.branch_name == tenant.initial_branch_name) |
-        (models.Branch.business_address == tenant.initial_business_address) |
-        ((models.Branch.latitude == tenant.initial_latitude) & (models.Branch.longitude == tenant.initial_longitude))
-    ).first()
 
-    if duplicate:
-        raise HTTPException(status_code=400, detail="Initial branch already exists (Duplicate name, address, or coordinates)")
+def generate_voice_gtts(text: str, lang: str = "ur", slow: bool = False) -> bytes:
+    from gtts import gTTS
+    import io
+    tts = gTTS(text=text, lang=lang, slow=slow)
+    audio_buffer = io.BytesIO()
+    tts.write_to_fp(audio_buffer)
+    audio_buffer.seek(0)
+    return audio_buffer.read()
 
-    # Consolidated Onboarding: Commit Tenant and Branch simultaneously
-    new_tenant = models.Tenant(
-        company_name=tenant.company_name,
-        email=tenant.email,
-        password=tenant.password, # Plain text as requested
-        business_number=tenant.business_number,
-        industry_type=tenant.industry_type
-    )
-    db.add(new_tenant)
-    db.commit()
-    db.refresh(new_tenant)
 
-    new_branch = models.Branch(
-        tenant_id=new_tenant.id,
-        branch_name=tenant.initial_branch_name,
-        business_address=tenant.initial_business_address,
-        latitude=tenant.initial_latitude,
-        longitude=tenant.initial_longitude
-    )
-    db.add(new_branch)
-    db.commit()
+# ==================== ROUTES ====================
 
-    logger.info(f"New Tenant Registered: {new_tenant.company_name} with initial branch {new_branch.branch_name}")
+@app.post("/auth/signup")
+async def signup(tenant_data: TenantSignup, db: Session = Depends(get_db)):
+    try:
+        existing = db.query(Tenant).filter(Tenant.email == tenant_data.email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Business email already registered.")
 
-    return {
-        "access_token": f"mock_secure_token_{new_tenant.id}",
-        "token_type": "bearer",
-        "tenant_id": new_tenant.id,
-        "company_name": new_tenant.company_name
-    }
+        new_tenant = Tenant(
+            company_name=tenant_data.company_name,
+            email=tenant_data.email,
+            password_hash=hash_password(tenant_data.password),
+            business_number=tenant_data.business_number,
+            business_address=tenant_data.business_address,
+            industry_type=tenant_data.industry_type,
+            latitude=tenant_data.latitude,
+            longitude=tenant_data.longitude
+        )
+        db.add(new_tenant)
+        db.commit()
+        db.refresh(new_tenant)
 
-@app.post("/auth/login", response_model=schemas.Token)
-def login(login_data: schemas.TenantLogin, db: Session = Depends(get_db)):
-    db_tenant = db.query(models.Tenant).filter(
-        models.Tenant.email == login_data.email,
-        models.Tenant.password == login_data.password
-    ).first()
+        initial_branch = Branch(
+            tenant_id=new_tenant.id,
+            branch_name=tenant_data.branch_name,
+            business_address=tenant_data.business_address,
+            latitude=tenant_data.latitude,
+            longitude=tenant_data.longitude
+        )
+        db.add(initial_branch)
+        db.commit()
 
-    if not db_tenant:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        logger.info(f"🚀 Registered: {tenant_data.company_name} (ID: {new_tenant.id})")
+        return {"status": "success", "company_name": new_tenant.company_name, "tenant_id": new_tenant.id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Signup error: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
-    return {
-        "access_token": f"mock_secure_token_{db_tenant.id}",
-        "token_type": "bearer",
-        "tenant_id": db_tenant.id,
-        "company_name": db_tenant.company_name
-    }
 
-# --- BRANCH MANAGEMENT ---
+@app.post("/auth/login")
+async def login(credentials: TenantLogin, db: Session = Depends(get_db)):
+    try:
+        tenant = db.query(Tenant).filter(Tenant.email == credentials.email).first()
+        if not tenant or not verify_password(credentials.password, tenant.password_hash):
+            raise HTTPException(status_code=401, detail="Invalid email or password.")
+        if not tenant.is_active:
+            raise HTTPException(status_code=403, detail="Account is deactivated.")
 
-@app.get("/branches", response_model=List[schemas.Branch])
-def get_branches(tenant_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Branch).filter(models.Branch.tenant_id == tenant_id).all()
+        token = create_jwt_token(tenant.id)
+        logger.info(f"✅ Login successful: {tenant.company_name}")
+        return {
+            "status": "success",
+            "access_token": token,
+            "company_name": tenant.company_name,
+            "token_type": "bearer",
+            "expires_in": TOKEN_EXPIRY_HOURS * 3600
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail="Login failed.")
 
-@app.post("/branches", response_model=schemas.Branch)
-def add_branch(branch: schemas.BranchCreate, tenant_id: int, db: Session = Depends(get_db)):
-    # The Multi-Branch Anti-Duplication Rule
-    duplicate = db.query(models.Branch).filter(
-        (models.Branch.branch_name == branch.branch_name) |
-        (models.Branch.business_address == branch.business_address) |
-        ((models.Branch.latitude == branch.latitude) & (models.Branch.longitude == branch.longitude))
-    ).first()
 
-    if duplicate:
-        raise HTTPException(status_code=400, detail="Branch already exists (Duplicate name, address, or coordinates)")
+@app.get("/branches")
+async def get_branches(tenant_id: int = Depends(get_current_tenant), db: Session = Depends(get_db)):
+    try:
+        branches = db.query(Branch).filter(
+            Branch.tenant_id == tenant_id, Branch.is_deleted == 0
+        ).all()
+        return [
+            {
+                "id": b.id, "branch_name": b.branch_name,
+                "business_address": b.business_address,
+                "latitude": b.latitude, "longitude": b.longitude,
+                "created_at": b.created_at
+            } for b in branches
+        ]
+    except Exception as e:
+        logger.error(f"Get branches error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch branches.")
 
-    new_branch = models.Branch(**branch.dict(), tenant_id=tenant_id)
-    db.add(new_branch)
-    db.commit()
-    db.refresh(new_branch)
-    return new_branch
+
+@app.post("/branches")
+async def add_branch(
+    branch_data: BranchCreate,
+    tenant_id: int = Depends(get_current_tenant),
+    db: Session = Depends(get_db)
+):
+    try:
+        duplicate = db.query(Branch).filter(
+            Branch.tenant_id == tenant_id, Branch.is_deleted == 0,
+            (Branch.branch_name == branch_data.branch_name) |
+            ((Branch.latitude == branch_data.latitude) & (Branch.longitude == branch_data.longitude))
+        ).first()
+        if duplicate:
+            raise HTTPException(status_code=400, detail="Branch with same name or coordinates already exists.")
+
+        new_branch = Branch(
+            tenant_id=tenant_id,
+            branch_name=branch_data.branch_name,
+            business_address=branch_data.business_address,
+            latitude=branch_data.latitude,
+            longitude=branch_data.longitude
+        )
+        db.add(new_branch)
+        db.commit()
+        db.refresh(new_branch)
+        logger.info(f"📍 New branch: {new_branch.branch_name} (ID: {new_branch.id})")
+        return {"status": "success", "id": new_branch.id, "message": f"Branch added."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Add branch error: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to add branch.")
+
 
 @app.delete("/branches/{branch_id}")
-def delete_branch(branch_id: int, db: Session = Depends(get_db)):
-    db_branch = db.query(models.Branch).filter(models.Branch.id == branch_id).first()
-    if not db_branch:
-        raise HTTPException(status_code=404, detail="Branch not found")
-    db.delete(db_branch)
-    db.commit()
-    return {"status": "success", "message": "Branch expunged"}
+async def delete_branch(
+    branch_id: int,
+    tenant_id: int = Depends(get_current_tenant),
+    db: Session = Depends(get_db)
+):
+    try:
+        branch = db.query(Branch).filter(
+            Branch.id == branch_id, Branch.tenant_id == tenant_id, Branch.is_deleted == 0
+        ).first()
+        if not branch:
+            raise HTTPException(status_code=404, detail="Branch not found or access denied.")
 
-# --- VOICE ENGINE CORE ---
+        branch.is_deleted = 1
+        branch.updated_at = datetime.utcnow().isoformat()
+        db.commit()
+        logger.info(f"🗑️ Branch deleted: {branch.branch_name}")
+        return {"status": "success", "message": "Branch removed."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete branch error: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete.")
+
 
 @app.get("/api/v1/voice/test-sample")
-def test_voice_sample():
-    # Native Urdu Phonetic Script
-    urdu_text = "السلام علیکم! پن پوائنٹ کور کا وائس انجن اب مکمل طور پر فعال ہے۔"
+async def stream_voice_test(
+    gender: str = Query(default="female", pattern="^(male|female)$"),
+    tenant_id: int = Depends(get_current_tenant),
+    db: Session = Depends(get_db)
+):
+    try:
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        custom_prompt = tenant.custom_voice_prompt if tenant and tenant.custom_voice_prompt else None
 
-    # Pipeline rendering localized Urdu voice streams natively
-    tts = gTTS(text=urdu_text, lang='ur')
+        if custom_prompt:
+            text_to_speak = custom_prompt
+        else:
+            text_to_speak = "السلام علیکم! پن پوائنٹ کور کا وائس انجن اب مکمل طور پر فعال ہے۔" if gender == "female" else "السلام علیکم! یہ پن پوائنٹ کور کا ٹیسٹ وائس ہے۔"
 
-    mp3_fp = io.BytesIO()
-    tts.write_to_fp(mp3_fp)
-    mp3_fp.seek(0)
+        audio_bytes = generate_voice_gtts(text_to_speak, lang='ur', slow=False)
+        engine_used = "gtts"
 
-    return StreamingResponse(mp3_fp, media_type="audio/mpeg")
+        log_entry = VoiceTestLog(
+            tenant_id=tenant_id, gender=gender,
+            text_spoken=text_to_speak[:500], engine_used=engine_used
+        )
+        db.add(log_entry)
+        db.commit()
+
+        logger.info(f"✅ Voice generated via gTTS ({gender}) for tenant {tenant_id}")
+        return Response(
+            content=audio_bytes, media_type="audio/mpeg",
+            headers={"Content-Disposition": f"inline; filename=voice_{gender}.mp3", "X-Engine": engine_used}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Voice error: {e}")
+        raise HTTPException(status_code=500, detail=f"Voice generation failed: {str(e)}")
+
+
+@app.put("/api/v1/tenant/settings/voice")
+async def update_voice_settings(
+    settings: VoiceSettingsUpdate,
+    tenant_id: int = Depends(get_current_tenant),
+    db: Session = Depends(get_db)
+):
+    try:
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found.")
+
+        tenant.preferred_voice_gender = settings.preferred_voice_gender
+        if settings.custom_voice_prompt is not None:
+            tenant.custom_voice_prompt = settings.custom_voice_prompt
+        if settings.support_email is not None:
+            tenant.support_email = settings.support_email
+        tenant.updated_at = datetime.utcnow().isoformat()
+        db.commit()
+        db.refresh(tenant)
+
+        logger.info(f"🎙️ Voice settings updated for tenant {tenant_id}")
+        return {
+            "status": "success", "message": "Voice settings saved.",
+            "settings": {
+                "preferred_voice_gender": tenant.preferred_voice_gender,
+                "custom_voice_prompt": tenant.custom_voice_prompt,
+                "support_email": tenant.support_email
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update voice settings error: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update settings.")
+
 
 @app.get("/api/v1/agents/health")
 def get_agents_health():
@@ -172,10 +461,14 @@ def get_agents_health():
     }
 
 @app.get("/config")
-def get_config():
+async def get_config():
     return {
-        "engine_health": "OPTIMAL",
-        "security": "LOOSE_SIMULATION",
-        "voice_engine": "gTTS_URDU",
-        "db_node": "SQLite_LOCAL"
+        "status": "active",
+        "google_maps_api_key": os.getenv("GOOGLE_MAPS_API_KEY", ""),
+        "environment": os.getenv("ENVIRONMENT", "development")
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
