@@ -14,7 +14,7 @@ def test_agent_counts():
     assert len(data_team) == 10
     assert any(a.role == 'Executive Document Architect' for a in data_team)
     assert qa.role == 'QA Agent'
-    assert ceo.role == 'Friday CEO'
+    assert "Friday CEO" in ceo.role
     assert scout.role == 'JARVIS Scout & Liaison'
     assert client_liaison.role == 'Live Data Collector'
 

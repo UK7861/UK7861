@@ -26,13 +26,25 @@ class FridayThinkingEngine:
             "Data Engineer": [data_cleaning_tool, sql_query_master_tool],
             "BI Architect": [bi_automation_tool],
             "Executive Document Architect": [document_generation_tool],
-            "Strategic Analyst": []
+            "Strategic Analyst": [],
+            "Zara (Creative Designer)": [],
+            "Omar (Data Scientist)": [ml_oracle.tools if hasattr(ml_oracle, 'tools') else []],
+            "Fatima (People Ops)": []
         }
 
         # Simulated decomposition based on keywords
         required_roles = ["Strategic Analyst"]
         if "data" in user_intent.lower() or "sql" in user_intent.lower(): required_roles.append("Data Engineer")
         if "dashboard" in user_intent.lower() or "bi" in user_intent.lower(): required_roles.append("BI Architect")
+
+        # New advanced roles
+        if "design" in user_intent.lower() or "image" in user_intent.lower() or "ui" in user_intent.lower():
+            required_roles.append("Zara (Creative Designer)")
+        if "prediction" in user_intent.lower() or "model" in user_intent.lower() or "science" in user_intent.lower():
+            required_roles.append("Omar (Data Scientist)")
+        if "team" in user_intent.lower() or "hiring" in user_intent.lower():
+            required_roles.append("Fatima (People Ops)")
+
         # Trigger Document Architect for reports, invoices, or bills
         if any(kw in user_intent.lower() for kw in ["report", "strategy", "invoice", "bill"]):
             required_roles.append("Executive Document Architect")

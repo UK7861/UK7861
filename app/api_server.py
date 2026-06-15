@@ -25,7 +25,8 @@ class StateManager:
             "intel_level": 1000,
             "status": "CONSCIOUS",
             "pulse_rate": 60,
-            "memory_nodes": 4096
+            "memory_nodes": 4096,
+            "total_nodes": "INFINITE"
         }
         self.approval_pending = False
         self.pending_action = ""
@@ -61,6 +62,8 @@ class StateManager:
             "status": "INITIALIZING",
             "progress": 0,
             "health": 100,
+            "stamina": 100.0,
+            "energy": 100.0,
             "load": 0,
             "spawn_time": time.time()
         }
@@ -120,6 +123,14 @@ def update_agent(name: str, status: str, progress: int):
             agent_data["status"] = status
             agent_data["progress"] = progress
             agent_data["load"] = random.randint(10, 90) if status == "WORKING" else 0
+            # Decay stamina if working
+            if status == "WORKING":
+                agent_data["stamina"] = max(0, agent_data["stamina"] - random.uniform(0.1, 0.5))
+                agent_data["energy"] = max(0, agent_data["energy"] - random.uniform(0.05, 0.2))
+            else:
+                # Recover
+                agent_data["stamina"] = min(100, agent_data["stamina"] + 0.2)
+                agent_data["energy"] = min(100, agent_data["energy"] + 0.1)
             found = True
             break
 
@@ -150,8 +161,9 @@ def add_log_entry(req: Dict[str, str]):
 
 @app.post("/intel_upgrade")
 def upgrade_intel():
-    state.core["intel_level"] += 1
-    return {"level": state.core["intel_level"]}
+    state.core["intel_level"] += random.randint(5, 20)
+    state.core["memory_nodes"] += random.randint(100, 500)
+    return {"level": state.core["intel_level"], "nodes": state.core["memory_nodes"]}
 
 @app.post("/upgrade_core")
 def upgrade_core():
