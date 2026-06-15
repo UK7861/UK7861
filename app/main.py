@@ -1,103 +1,37 @@
-from crewai import Crew, Task, Agent
-from app.tools.mock_llm import MockLLM
-from app.tools.data_tools import (
-    report_synthesizer, agent_creator_tool, system_fixer_tool,
-    evolution_tool, live_data_stream_tool, document_generation_tool,
-    data_cleaning_tool, bi_automation_tool, sql_query_master_tool
-)
-import requests
-import time
-import random
+from app.orchestration.graph_engine import build_friday_graph
+from app.core.logging_config import logger
+from app.db.postgres import get_session
+from app.models.persistence import Mission
+import asyncio
 
-API_URL = "http://localhost:8000"
+async def run_production_mission(user_intent: str):
+    logger.info("FRIDAY MISSION INITIATED", intent=user_intent)
 
-class FridayThinkingEngine:
-    def __init__(self):
-        self.llm = MockLLM()
-        self.core_memory = []
+    # Initialize LangGraph workflow
+    workflow = build_friday_graph()
+    app = workflow.compile()
 
-    def interpret_and_execute(self, user_intent: str):
-        print(f"FRIDAY CORE: Analyzing intent - '{user_intent}'")
-        requests.post(f"{API_URL}/intel_upgrade")
+    # Initial State
+    initial_state = {
+        "task": user_intent,
+        "plan": [],
+        "results": [],
+        "current_agent": "friday_ceo",
+        "history": [],
+        "status": "started"
+    }
 
-        # 1. Dynamic Task Decomposition (Simulated LLM call)
-        # Instead of hardcoding, we simulate fetching the required personas for the intent
-        available_tool_map = {
-            "Data Engineer": [data_cleaning_tool, sql_query_master_tool],
-            "BI Architect": [bi_automation_tool],
-            "Executive Document Architect": [document_generation_tool],
-            "Strategic Analyst": [],
-            "Zara (Creative Designer)": [],
-            "Omar (Data Scientist)": [ml_oracle.tools if hasattr(ml_oracle, 'tools') else []],
-            "Fatima (People Ops)": []
-        }
+    # Execute Graph
+    logger.info("Orchestrating multi-agent workflow via LangGraph")
+    final_state = await app.ainvoke(initial_state)
 
-        # Simulated decomposition based on keywords
-        required_roles = ["Strategic Analyst"]
-        if "data" in user_intent.lower() or "sql" in user_intent.lower(): required_roles.append("Data Engineer")
-        if "dashboard" in user_intent.lower() or "bi" in user_intent.lower(): required_roles.append("BI Architect")
+    # Persistence
+    # (Assuming we have a way to get session here or use a context manager)
+    # This is a simplified production flow
 
-        # New advanced roles
-        if "design" in user_intent.lower() or "image" in user_intent.lower() or "ui" in user_intent.lower():
-            required_roles.append("Zara (Creative Designer)")
-        if "prediction" in user_intent.lower() or "model" in user_intent.lower() or "science" in user_intent.lower():
-            required_roles.append("Omar (Data Scientist)")
-        if "team" in user_intent.lower() or "hiring" in user_intent.lower():
-            required_roles.append("Fatima (People Ops)")
-
-        # Trigger Document Architect for reports, invoices, or bills
-        if any(kw in user_intent.lower() for kw in ["report", "strategy", "invoice", "bill"]):
-            required_roles.append("Executive Document Architect")
-
-        dynamic_agents = []
-        crew_tasks = []
-
-        for role in required_roles:
-            # 2. Dynamic Agent Synthesis
-            agent_id_resp = requests.post(f"{API_URL}/command", json={"command": f"Synthesize {role}"}).json()
-
-            agent = Agent(
-                role=role,
-                goal=f"Execute {role} operations for: {user_intent}",
-                backstory=f"A specialized humanoid intelligence unit synthesized by FRIDAY for {role}.",
-                tools=available_tool_map.get(role, []),
-                llm=self.llm,
-                verbose=True,
-                allow_delegation=False
-            )
-            dynamic_agents.append(agent)
-
-            task = Task(
-                description=f"Perform {role} analysis on: {user_intent}",
-                agent=agent,
-                expected_output=f"Finalized {role} output for the mission."
-            )
-            crew_tasks.append(task)
-
-        # 3. Autonomous Orchestration
-        friday_crew = Crew(
-            agents=dynamic_agents,
-            tasks=crew_tasks,
-            verbose=True,
-            process="hierarchical", # FRIDAY manages the workflow
-            manager_llm=self.llm
-        )
-
-        print("FRIDAY OS: Orchestrating dynamic intelligence...")
-        result = friday_crew.kickoff()
-
-        # 4. Evolution & Logging
-        requests.post(f"{API_URL}/mission_result", json={
-            "intent": user_intent,
-            "result": str(result),
-            "agents": [a.role for a in dynamic_agents]
-        })
-        requests.post(f"{API_URL}/upgrade_core")
-        return result
-
-def run_agency_mission(intent):
-    engine = FridayThinkingEngine()
-    return engine.interpret_and_execute(intent)
+    logger.info("MISSION COMPLETED", status=final_state.get("status"))
+    return final_state
 
 if __name__ == "__main__":
-    run_agency_mission("Synthesize a market entry strategy for autonomous AI agencies in Pakistan.")
+    # Test execution
+    asyncio.run(run_production_mission("Synthesize a production-grade strategy for FRIDAY OS deployment."))
