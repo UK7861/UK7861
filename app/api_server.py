@@ -108,6 +108,28 @@ async def hud_websocket(websocket: WebSocket):
 @app.on_event("startup")
 def startup():
     init_db()
+
+    # Seed Agents if table is empty
+    from app.agents.all_agents import get_all_agents
+    from app.db.postgres import Session
+
+    with Session(engine) as session:
+        existing = session.exec(select(AgentState)).first()
+        if not existing:
+            workforce = get_all_agents()
+            for agent in workforce["all_list"]:
+                state = AgentState(
+                    id=agent.role.replace(" ", "_").lower(),
+                    role=agent.role,
+                    status="STANDBY",
+                    progress=0,
+                    energy=100.0,
+                    stamina=100.0
+                )
+                session.add(state)
+            session.commit()
+            logger.info(f"Seeded {len(workforce['all_list'])} agents into state manager.")
+
     logger.info("FRIDAY Production OS Initialized")
 
 if __name__ == "__main__":

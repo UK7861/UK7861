@@ -1,7 +1,8 @@
 import time
 import requests
 import random
-from app.main import run_agency_mission
+from app.main import run_production_mission
+import asyncio
 
 API_URL = "http://localhost:8000"
 
@@ -42,7 +43,7 @@ def autopilot_loop():
             requests.post(f"{API_URL}/log", json={"message": f"MISSION INITIATED: {requirement}", "level": "INFO"})
 
             # Run the mission
-            result = run_agency_mission(requirement)
+            asyncio.run(run_production_mission(requirement))
 
             requests.post(f"{API_URL}/log", json={"message": "MISSION COMPLETE: Final report ready for Boss.", "level": "SUCCESS"})
 

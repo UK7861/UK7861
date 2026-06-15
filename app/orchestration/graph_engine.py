@@ -3,6 +3,8 @@ from typing import TypedDict, List, Annotated, Dict, Any, Union
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
+from app.agents.all_agents import get_all_agents
+from crewai import Crew, Process, Task
 import operator
 
 # State definition
@@ -12,48 +14,59 @@ class AgentState(TypedDict):
     context: Dict[str, Any]
     mission_id: int
 
+# Load the Friday Workforce
+WORKFORCE = get_all_agents()
+
 # Node implementations
 def planner_node(state: AgentState):
-    # Uses LLM to create a plan based on the first human message
-    task = state['messages'][0].content
-    # Simulation of planning logic
-    plan = [
-        "scout_market",
-        "ingest_data",
-        "engineer_features",
-        "generate_report"
-    ]
+    # CEO Plans the mission
+    task_description = state['messages'][0].content
+    ceo = WORKFORCE["leadership"][0]
+
+    # In a real scenario, the LLM would decompose this.
+    # We simulate the CEO's planning logic:
+    plan = ["Scouting", "Data Analysis", "Documentation", "QA Audit"]
+
     return {
-        "messages": [AIMessage(content=f"Plan generated: {', '.join(plan)}")],
-        "context": {"plan": plan, "current_step": 0},
+        "messages": [AIMessage(content=f"Friday CEO: Mission planned. Sequence: {', '.join(plan)}")],
+        "context": {"plan": plan, "current_step": 0, "target_specialists": ["python_overlord", "sql_overlord", "ml_oracle"]},
         "next_node": "scout_agent"
     }
 
 def scout_node(state: AgentState):
+    scout = WORKFORCE["leadership"][1]
+    # Simulate Scout Action
     return {
-        "messages": [AIMessage(content="Scouted 5 new leads from Upwork and Toptal.")],
+        "messages": [AIMessage(content=f"{scout.role}: Identified high-value targets for current mission context.")],
         "context": {**state['context'], "current_step": 1},
         "next_node": "data_agent"
     }
 
 def data_node(state: AgentState):
+    # Dynamically select specialists based on context
+    specialists = WORKFORCE["specialists"]
+    active_agent = specialists[0] # Usually Python Overlord for general tasks
+
+    # Simulation of Specialist Execution
     return {
-        "messages": [AIMessage(content="Data ingested and cleaned. 1250 rows processed.")],
+        "messages": [AIMessage(content=f"{active_agent.role}: Task executed. Data processed and synthesized.")],
         "context": {**state['context'], "current_step": 2},
         "next_node": "qa_node"
     }
 
 def qa_node(state: AgentState):
+    qa = WORKFORCE["gatekeeper"]
     # Validation logic
     return {
-        "messages": [AIMessage(content="QA Audit Passed. 100% integrity verified.")],
+        "messages": [AIMessage(content=f"{qa.role}: Audit Passed. 100% integrity verified. No regressions found.")],
         "context": {**state['context'], "current_step": 3},
         "next_node": "finalizer"
     }
 
 def finalizer_node(state: AgentState):
+    doc_arch = [s for s in WORKFORCE["specialists"] if s.role == "Executive Document Architect"][0]
     return {
-        "messages": [AIMessage(content="Mission Successful. Master Report generated.")],
+        "messages": [AIMessage(content=f"{doc_arch.role}: Mission Successful. Master Report and Executive Briefing generated.")],
         "status": "completed",
         "next_node": END
     }

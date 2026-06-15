@@ -22,10 +22,13 @@ def launch_friday():
 
         # 3. Start Next.js Frontend
         print("Starting Next.js Production HUD...")
-        # (Assuming 'npm install' and 'npm run build' are done in Docker)
-        # In a local sandbox, we can simulate with dev mode if node is present
         frontend_process = subprocess.Popen(["npm", "run", "dev"], cwd="frontend")
         processes.append(frontend_process)
+
+        # 4. Start Streamlit Control Room
+        print("Starting Streamlit Control Room...")
+        streamlit_process = subprocess.Popen(["streamlit", "run", "app/app.py"])
+        processes.append(streamlit_process)
 
         # 5. Start Autopilot
         print("Starting Autopilot Engine...")
