@@ -159,7 +159,7 @@
             <div class="bg-white dark:bg-[#11181c] border border-slate-200 dark:border-[#1f2d37] p-4 rounded-xl shadow">
                 <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">AI Voice Engine Status</p>
                 <p class="text-2xl font-black text-emerald-500 mt-1">Operational</p>
-                <span class="text-[10px] text-slate-400 font-mono">gTTS + ElevenLabs Ready</span>
+                <span class="text-[10px] text-slate-400 font-mono">Local gTTS Pipeline Active</span>
             </div>
             <div class="bg-white dark:bg-[#11181c] border border-slate-200 dark:border-[#1f2d37] p-4 rounded-xl shadow">
                 <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Voice Tests</p>
@@ -174,6 +174,34 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-[#090d10] border border-[#1f2d37] rounded-2xl p-5 shadow-2xl lg:col-span-3">
+                <h3 class="text-sm font-bold text-emerald-500 mb-4 flex items-center gap-2">
+                    <span class="animate-pulse">●</span> Neural Matrix Diagnostics (Autonomous 4-Agent Team)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="agentTelemetryGrid">
+                    <div class="bg-[#11181c] border border-[#1f2d37] p-3 rounded-xl">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold">Agent 1: Carrier Interceptor</p>
+                        <p id="agent_1_status" class="text-xs text-emerald-400 font-mono mt-1">Initializing...</p>
+                        <p id="agent_1_telemetry" class="text-[10px] text-slate-400 mt-0.5 truncate">Waiting for signal...</p>
+                    </div>
+                    <div class="bg-[#11181c] border border-[#1f2d37] p-3 rounded-xl">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold">Agent 2: Log Diagnoser</p>
+                        <p id="agent_2_status" class="text-xs text-emerald-400 font-mono mt-1">Scanning...</p>
+                        <p id="agent_2_telemetry" class="text-[10px] text-slate-400 mt-0.5 truncate">Checking stack health...</p>
+                    </div>
+                    <div class="bg-[#11181c] border border-[#1f2d37] p-3 rounded-xl">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold">Agent 3: UI Optimizer</p>
+                        <p id="agent_3_status" class="text-xs text-emerald-400 font-mono mt-1">Validating...</p>
+                        <p id="agent_3_telemetry" class="text-[10px] text-slate-400 mt-0.5 truncate">Analyzing DOM isolation...</p>
+                    </div>
+                    <div class="bg-[#11181c] border border-[#1f2d37] p-3 rounded-xl">
+                        <p class="text-[9px] text-slate-500 uppercase font-bold">Agent 4: Schema Escalator</p>
+                        <p id="agent_4_status" class="text-xs text-emerald-400 font-mono mt-1">Mapping...</p>
+                        <p id="agent_4_telemetry" class="text-[10px] text-slate-400 mt-0.5 truncate">PostgreSQL prep-ready.</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white dark:bg-[#11181c] border border-slate-200 dark:border-[#1f2d37] rounded-2xl p-5 shadow-xl flex flex-col gap-3">
                 <div>
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white tracking-wide">🏢 Register New Branch</h3>
@@ -398,6 +426,7 @@
             fetchBranchRegistryMatrix();
             loadVoiceSettings();
             bindNativeVoiceTestTrigger();
+            startAgentHeartbeat();
         }
 
         async function loadGoogleMapsCore(isDashboard = false) {
@@ -759,6 +788,34 @@
                     return false; // Aggressive return
                 });
             }
+        }
+
+        async function fetchAgentTelemetry() {
+            try {
+                const theme = localStorage.getItem('theme') || 'light';
+                const response = await apiCall(`/api/v1/agents/health?theme=${theme}`, { method: 'GET' });
+                if (!response || !response.ok) return;
+                const data = await response.json();
+                const agents = data.agents;
+
+                document.getElementById('agent_1_status').innerText = agents.interceptor.status;
+                document.getElementById('agent_1_telemetry').innerText = `ID: ${agents.interceptor.last_signal.signal_id} (${agents.interceptor.last_signal.carrier})`;
+
+                document.getElementById('agent_2_status').innerText = agents.diagnoser.status;
+                document.getElementById('agent_2_status').className = agents.diagnoser.status.includes('CRITICAL') ? 'text-xs text-rose-500 font-mono mt-1' : 'text-xs text-emerald-400 font-mono mt-1';
+
+                document.getElementById('agent_3_status').innerText = agents.optimizer.status.status;
+                document.getElementById('agent_3_telemetry').innerText = `UI Checks: ${Object.values(agents.optimizer.status.checks).filter(v => v).length}/4 passed`;
+
+                document.getElementById('agent_4_status').innerText = agents.escalator.status;
+            } catch (err) {
+                console.error("Agent telemetry error:", err);
+            }
+        }
+
+        function startAgentHeartbeat() {
+            fetchAgentTelemetry();
+            setInterval(fetchAgentTelemetry, 10000);
         }
 
         function logoutTenant() {

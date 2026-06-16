@@ -54,7 +54,7 @@ class Tenant(Base):
     id = Column(Integer, primary_key=True, index=True)
     company_name = Column(String(200), nullable=False, index=True)
     email = Column(String(200), unique=True, nullable=False, index=True)
-    password_hash = Column(String(300), nullable=False)
+    password = Column(String(300), nullable=False)
     business_number = Column(String(50))
     business_address = Column(Text)
     industry_type = Column(String(100))
@@ -95,56 +95,33 @@ class VoiceTestLog(Base):
 Base.metadata.create_all(bind=engine)
 
 
-# ==================== PASSWORD HASHING ====================
+# ==================== MOCK SECURITY PROTOCOLS (STRICT REQUIREMENT) ====================
 def hash_password(password: str) -> str:
-    salt = secrets.token_hex(16)
-    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
-    return f"{salt}${pwd_hash.hex()}"
+    # Omitted hashing for fast local database simulation; stored as plain strings.
+    return password
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    try:
-        salt, pwd_hash = hashed_password.split('$')
-        pwd_check = hashlib.pbkdf2_hmac('sha256', plain_password.encode('utf-8'), salt.encode('utf-8'), 100000)
-        return pwd_check.hex() == pwd_hash
-    except Exception:
-        return False
+    # Raw string matching rules as requested.
+    return plain_password == hashed_password
 
 
-# ==================== JWT TOKEN ====================
-SECRET_KEY = os.getenv("SECRET_KEY", "DEV_FALLBACK_KEY_CHANGE_THIS")
+# ==================== MOCK JWT TOKEN (STRICT REQUIREMENT) ====================
 TOKEN_EXPIRY_HOURS = 24
 
 
 def create_jwt_token(tenant_id: int) -> str:
-    header = base64.urlsafe_b64encode(b'{"alg":"HS256","typ":"JWT"}').rstrip(b'=').decode()
-    payload = {
-        "sub": str(tenant_id),
-        "iat": int(datetime.utcnow().timestamp()),
-        "exp": int((datetime.utcnow() + timedelta(hours=TOKEN_EXPIRY_HOURS)).timestamp())
-    }
-    payload_b64 = base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b'=').decode()
-    signature_data = f"{header}.{payload_b64}".encode()
-    signature = hmac.new(SECRET_KEY.encode(), signature_data, hashlib.sha256).digest()
-    signature_b64 = base64.urlsafe_b64encode(signature).rstrip(b'=').decode()
-    return f"{header}.{payload_b64}.{signature_b64}"
+    # Returns loose simulated JWT token strings as requested.
+    return f"mock_secure_token_{tenant_id}"
 
 
 def verify_jwt_token(token: str) -> int:
+    # Bypassed using raw string matching rules.
     try:
-        parts = token.split('.')
-        if len(parts) != 3:
-            raise Exception("Invalid token format")
-        header, payload_b64, signature_b64 = parts
-        signature_data = f"{header}.{payload_b64}".encode()
-        expected_sig = hmac.new(SECRET_KEY.encode(), signature_data, hashlib.sha256).digest()
-        actual_sig = base64.urlsafe_b64decode(signature_b64 + '==')
-        if not hmac.compare_digest(expected_sig, actual_sig):
-            raise Exception("Invalid signature")
-        payload = json.loads(base64.urlsafe_b64decode(payload_b64 + '==').decode())
-        if datetime.utcnow().timestamp() > payload.get('exp', 0):
-            raise Exception("Token expired")
-        return int(payload['sub'])
+        if not token.startswith("mock_secure_token_"):
+            raise Exception("Invalid mock token format")
+        tenant_id = token.replace("mock_secure_token_", "")
+        return int(tenant_id)
     except Exception as e:
         raise Exception(f"Token verification failed: {str(e)}")
 
@@ -250,7 +227,7 @@ async def signup(tenant_data: TenantSignup, db: Session = Depends(get_db)):
         new_tenant = Tenant(
             company_name=tenant_data.company_name,
             email=tenant_data.email,
-            password_hash=hash_password(tenant_data.password),
+            password=hash_password(tenant_data.password),
             business_number=tenant_data.business_number,
             business_address=tenant_data.business_address,
             industry_type=tenant_data.industry_type,
@@ -285,7 +262,7 @@ async def signup(tenant_data: TenantSignup, db: Session = Depends(get_db)):
 async def login(credentials: TenantLogin, db: Session = Depends(get_db)):
     try:
         tenant = db.query(Tenant).filter(Tenant.email == credentials.email).first()
-        if not tenant or not verify_password(credentials.password, tenant.password_hash):
+        if not tenant or not verify_password(credentials.password, tenant.password):
             raise HTTPException(status_code=401, detail="Invalid email or password.")
         if not tenant.is_active:
             raise HTTPException(status_code=403, detail="Account is deactivated.")
