@@ -141,6 +141,27 @@ class NeuralGraphTool(BaseTool):
     def _run(self, node_data: str) -> str:
         return f"Knowledge Graph: New neural node '{node_data}' integrated and cross-referenced with core memory."
 
+class ProspectIntelligenceTool(BaseTool):
+    name: str = "prospect_intelligence_tool"
+    description: str = "Researches and analyzes specific prospects for data-related opportunities. Input is a company or person name."
+
+    def _run(self, prospect: str) -> str:
+        return f"Prospect Intelligence: Analyzed '{prospect}'. High probability of needing Big Data architecture and BI automation."
+
+class LeadDiscoveryTool(BaseTool):
+    name: str = "lead_discovery_tool"
+    description: str = "Crawl and discover new business leads from global platforms. Input is a sector (e.g. 'Healthcare')."
+
+    def _run(self, sector: str) -> str:
+        return f"Lead Discovery: Identified 12 new high-value leads in the '{sector}' sector. Forwarding to CRM Layer."
+
+class CRMLayerTool(BaseTool):
+    name: str = "crm_layer_tool"
+    description: str = "Manages lead lifecycle, customer interactions, and pipeline status. Input is lead data."
+
+    def _run(self, lead_data: str) -> str:
+        return f"CRM Layer: Lead '{lead_data}' updated in the master pipeline. Status: Prospect Intelligence Phase."
+
 class ConflictResolver(BaseTool):
     name: str = "conflict_resolver"
     description: str = "Resolves inconsistencies between agent outputs."

@@ -4,6 +4,7 @@ from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from app.agents.all_agents import get_all_agents
+from app.orchestration.nodes.reflection import reflection_node
 from crewai import Crew, Process, Task
 import operator
 
@@ -71,6 +72,14 @@ def finalizer_node(state: AgentState):
         "next_node": END
     }
 
+
+def human_handoff_node(state: AgentState):
+    # H-I-T-L approval logic
+    return {
+        "messages": [AIMessage(content="Friday: Awaiting human approval for critical mission action.")],
+        "next_node": "qa_node"
+    }
+
 def build_friday_graph():
     builder = StateGraph(AgentState)
 
@@ -78,14 +87,18 @@ def build_friday_graph():
     builder.add_node("scout_agent", scout_node)
     builder.add_node("data_agent", data_node)
     builder.add_node("qa_node", qa_node)
+    builder.add_node("reflection", reflection_node)
+    builder.add_node("human_handoff", human_handoff_node)
     builder.add_node("finalizer", finalizer_node)
 
     builder.set_entry_point("planner")
 
     builder.add_edge("planner", "scout_agent")
     builder.add_edge("scout_agent", "data_agent")
-    builder.add_edge("data_agent", "qa_node")
-    builder.add_edge("qa_node", "finalizer")
+    builder.add_edge("data_agent", "human_handoff")
+    builder.add_edge("human_handoff", "qa_node")
+    builder.add_edge("qa_node", "reflection")
+    builder.add_edge("reflection", "finalizer")
     builder.add_edge("finalizer", END)
 
     return builder.compile()

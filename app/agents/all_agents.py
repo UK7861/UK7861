@@ -3,8 +3,13 @@ from app.tools.data_tools import (
     data_cleaning_tool, bi_automation_tool, system_fixer_tool,
     document_generation_tool, sql_query_master_tool,
     data_distributor, agent_creator_tool, evolution_tool,
-    persistent_memory_tool, live_data_stream_tool
+    persistent_memory_tool, live_data_stream_tool,
+    ProspectIntelligenceTool, LeadDiscoveryTool, CRMLayerTool
 )
+
+prospect_tool = ProspectIntelligenceTool()
+lead_tool = LeadDiscoveryTool()
+crm_tool = CRMLayerTool()
 
 def get_all_agents(llm=None):
     # --- LEADERSHIP & ACQUISITION ---
@@ -19,8 +24,9 @@ def get_all_agents(llm=None):
 
     jarvis_scout = Agent(
         role='JARVIS Scout & Liaison',
-        goal='Hunt global freelance/data jobs and onboard clients with human-like charm.',
+        goal='Hunt global freelance/data jobs, discover new leads, and onboard clients with human-like charm.',
         backstory='High emotional intelligence. Vocal Signature: "I have identified high-value opportunities globally. Connecting with the client now to secure the contract."',
+        tools=[lead_tool, prospect_tool, crm_tool],
         llm=llm,
         verbose=True
     )

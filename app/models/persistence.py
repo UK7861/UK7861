@@ -14,6 +14,9 @@ class Mission(SQLModel, table=True):
     intent: str
     status: str = "pending" # pending, working, success, failed
     result: Optional[str] = None
+    cost: float = 0.0
+    execution_time: float = 0.0
+    tokens_used: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")

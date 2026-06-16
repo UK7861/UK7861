@@ -83,11 +83,16 @@ async def execute_mission(intent: str, user: User = Depends(get_current_user), s
 async def get_system_state(session: Session = Depends(get_session)):
     agents = session.exec(select(AgentState)).all()
     logs = session.exec(select(SystemLog).order_by(SystemLog.timestamp.desc()).limit(20)).all()
+    missions = session.exec(select(Mission).order_by(Mission.created_at.desc()).limit(10)).all()
     graph = graph_memory.get_graph()
+
+    total_cost = sum(m.cost for m in missions if m.cost)
 
     return {
         "agents": agents,
         "logs": logs,
+        "missions": missions,
+        "total_cost": total_cost,
         "knowledge_graph": graph,
         "intel_level": redis_cache.get_state("intel_level") or 1000,
         "uptime": 3600 # Placeholder

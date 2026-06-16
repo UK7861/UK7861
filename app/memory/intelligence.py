@@ -1,20 +1,50 @@
+import chromadb
+from sentence_transformers import SentenceTransformer
 from app.memory.graph import graph_memory
 from app.db.redis_bus import redis_cache
 from app.core.logging_config import logger
+import os
+
+# Initialize Vector DB
+chroma_client = chromadb.PersistentClient(path="app/vault/chroma_db")
+embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 class LongTermMemory:
-    @staticmethod
-    def store_experience(mission_id: int, intent: str, result: str):
-        # Store in Neo4j as a relationship
+    def __init__(self):
+        self.collection = chroma_client.get_or_create_collection(name="mission_memory")
+
+    def store_experience(self, mission_id: int, intent: str, result: str):
+        # 1. Semantic Memory (ChromaDB)
+        embedding = embedding_model.encode(intent).tolist()
+        self.collection.add(
+            embeddings=[embedding],
+            documents=[intent],
+            metadatas=[{"mission_id": mission_id, "result": result}],
+            ids=[str(mission_id)]
+        )
+
+        # 2. Knowledge Graph Memory (Neo4j)
         graph_memory.add_knowledge("Mission", f"COMPLETED_{mission_id}", intent)
-        # Store metadata in Redis for quick access
+
+        # 3. Episodic Memory (Redis)
         redis_cache.set_state(f"mission:{mission_id}:result", result)
         logger.info("Experience Stored", mission_id=mission_id)
 
-    @staticmethod
-    def retrieve_context(query: str):
-        # Semantic search or graph traversal logic
-        return graph_memory.get_graph()
+    def retrieve_context(self, query: str):
+        # 1. Semantic Search
+        query_embedding = embedding_model.encode(query).tolist()
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=3
+        )
+
+        # 2. Graph Context
+        graph_context = graph_memory.get_graph()
+
+        return {
+            "semantic_memory": results['documents'],
+            "graph_memory": graph_context
+        }
 
 class AgentLearner:
     @staticmethod
